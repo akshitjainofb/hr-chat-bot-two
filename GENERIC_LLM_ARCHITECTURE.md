@@ -221,7 +221,7 @@ GEMINI_MODEL=gemini-pro
 
 # HuggingFace
 HUGGINGFACE_API_KEY=hf_...
-HUGGINGFACE_MODEL=microsoft/DialoGPT-large
+HUGGINGFACE_MODEL=microsoft/DialoGPT-medium
 ```
 
 ### Application Properties

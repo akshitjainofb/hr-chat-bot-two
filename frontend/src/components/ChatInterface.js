@@ -165,6 +165,14 @@ const ChatInterface = ({ room, onRoomUpdate }) => {
         };
 
         setMessages(prev => [...prev, assistantMessage]);
+        
+        // Update the room with new message count
+        if (onRoomUpdate) {
+          onRoomUpdate(prev => ({
+            ...prev,
+            messageCount: prev.messageCount + 2 // +2 for user message and assistant response
+          }));
+        }
       } else {
         toast.error(response.data.error || 'Failed to send message');
       }
@@ -259,6 +267,15 @@ const ChatInterface = ({ room, onRoomUpdate }) => {
 
       await api.delete(`/api/chat/rooms/${room.id}/messages?userEmail=${user.email}`);
       setMessages([]);
+      
+      // Update the room with cleared message count
+      if (onRoomUpdate) {
+        onRoomUpdate(prev => ({
+          ...prev,
+          messageCount: 0
+        }));
+      }
+      
       toast.success('Chat cleared successfully');
     } catch (error) {
       console.error('Error clearing chat:', error);

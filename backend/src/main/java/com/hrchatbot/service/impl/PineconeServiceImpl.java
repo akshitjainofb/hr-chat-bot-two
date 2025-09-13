@@ -43,7 +43,7 @@ public class PineconeServiceImpl implements PineconeService {
             Index index = index();
             
             // Split content into chunks
-            List<String> chunks = splitIntoChunks(content, 1000);
+            List<String> chunks = splitIntoChunks(content, 300);
             
             List<Map<String, String>> records = new ArrayList<>();
             

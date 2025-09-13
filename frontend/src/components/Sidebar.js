@@ -4,7 +4,7 @@ import { useDarkMode } from '../contexts/DarkModeContext';
 import api from '../config/axios';
 import toast from 'react-hot-toast';
 
-const Sidebar = ({ selectedRoom, onRoomSelect, onClose }) => {
+const Sidebar = ({ selectedRoom, onRoomSelect, onClose, refreshTrigger }) => {
   const { isDarkMode } = useDarkMode();
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -19,6 +19,13 @@ const Sidebar = ({ selectedRoom, onRoomSelect, onClose }) => {
   useEffect(() => {
     fetchChatRooms();
   }, []);
+
+  // Refresh rooms when refreshTrigger changes
+  useEffect(() => {
+    if (refreshTrigger > 0) {
+      fetchChatRooms();
+    }
+  }, [refreshTrigger]);
 
   const fetchChatRooms = async () => {
     try {

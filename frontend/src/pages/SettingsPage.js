@@ -122,10 +122,16 @@ const SettingsPage = () => {
       color: 'bg-blue-100 text-blue-800'
     },
     huggingface: {
-      name: 'Hugging Face',
-      description: 'Open-source models with good performance',
+      name: 'Hugging Face (API)',
+      description: 'Open-source models via API with good performance',
       icon: '🤗',
       color: 'bg-purple-100 text-purple-800'
+    },
+    'local-huggingface': {
+      name: 'Hugging Face (Local)',
+      description: 'Run models locally - no API key needed, completely private',
+      icon: '🏠',
+      color: 'bg-orange-100 text-orange-800'
     }
   };
 

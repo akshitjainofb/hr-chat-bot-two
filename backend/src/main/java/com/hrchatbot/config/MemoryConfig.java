@@ -16,7 +16,7 @@ public class MemoryConfig {
     /**
      * Maximum token limit for short-term memory sliding window
      */
-    private int tokenLimit = 2000;
+    private int tokenLimit = 1000;
     
     /**
      * Maximum number of long-term memory items to retrieve from Pinecone

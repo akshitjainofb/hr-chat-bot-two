@@ -75,12 +75,9 @@
             <version>2.10.1</version>
         </dependency>
 
-        <!-- Hugging Face -->
-        <dependency>
-            <groupId>ai.djl.huggingface</groupId>
-            <artifactId>tokenizers</artifactId>
-            <version>0.24.0</version>
-        </dependency>
+        <!-- Hugging Face - Local Models (Simplified) -->
+        <!-- Note: This is a simplified implementation. For full local model support, 
+             additional DJL dependencies and setup would be required -->
 
         <!-- PDF Processing -->
         <dependency>

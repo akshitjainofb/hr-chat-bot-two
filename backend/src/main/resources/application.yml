@@ -44,11 +44,18 @@ llm:
       timeout: 30
     huggingface:
       api-key: ${HUGGINGFACE_API_KEY:your-huggingface-key}
-      model: microsoft/DialoGPT-large
+      model: microsoft/DialoGPT-medium
       enabled: true
       max-tokens: 200
       temperature: 0.7
       timeout: 30
+    local-huggingface:
+      api-key: ""  # No API key needed for local models
+      model: microsoft/DialoGPT-medium  # Can be overridden with system property hf.model.size
+      enabled: true
+      max-tokens: 500
+      temperature: 0.7
+      timeout: 60  # Local models might take longer
 
 # Pinecone Configuration
 pinecone:
@@ -67,6 +74,23 @@ memory:
   long-term-memory-limit: ${MEMORY_LONG_TERM_LIMIT:5}
   document-context-limit: ${MEMORY_DOCUMENT_LIMIT:5}
   archive-batch-size: ${MEMORY_ARCHIVE_BATCH_SIZE:20}
+
+# Local Model Configuration
+local-models:
+  cache-dir: ${LOCAL_MODEL_CACHE_DIR:./models}
+  auto-download: ${LOCAL_MODEL_AUTO_DOWNLOAD:true}
+  max-models-in-memory: ${LOCAL_MODEL_MAX_IN_MEMORY:2}
+  preferred-size: ${LOCAL_MODEL_SIZE:medium}  # small, medium, large, best
+  use-gpu: ${LOCAL_MODEL_USE_GPU:false}
+  memory-limit-mb: ${LOCAL_MODEL_MEMORY_LIMIT:2048}
+
+# Ollama Configuration
+ollama:
+  base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
+  default-model: ${OLLAMA_DEFAULT_MODEL:llama2:7b}
+  timeout: ${OLLAMA_TIMEOUT:30}
+  temperature: ${OLLAMA_TEMPERATURE:0.7}
+  max-tokens: ${OLLAMA_MAX_TOKENS:500}
 
 # CORS Configuration
 cors:

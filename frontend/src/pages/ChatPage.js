@@ -10,6 +10,7 @@ const ChatPage = () => {
   const { isDarkMode } = useDarkMode();
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [refreshSidebar, setRefreshSidebar] = useState(0);
 
   return (
     <div className={`h-screen flex ${
@@ -31,6 +32,7 @@ const ChatPage = () => {
           selectedRoom={selectedRoom}
           onRoomSelect={setSelectedRoom}
           onClose={() => setSidebarOpen(false)}
+          refreshTrigger={refreshSidebar}
         />
       </div>
 
@@ -124,7 +126,10 @@ const ChatPage = () => {
           {selectedRoom ? (
             <ChatInterface
               room={selectedRoom}
-              onRoomUpdate={setSelectedRoom}
+              onRoomUpdate={(updatedRoom) => {
+                setSelectedRoom(updatedRoom);
+                setRefreshSidebar(prev => prev + 1);
+              }}
             />
           ) : (
             <div className={`h-full flex items-center justify-center ${
