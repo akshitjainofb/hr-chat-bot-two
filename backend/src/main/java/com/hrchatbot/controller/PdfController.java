@@ -4,10 +4,11 @@ import com.hrchatbot.dto.ApiResponse;
 import com.hrchatbot.dto.PdfDocumentDto;
 import com.hrchatbot.dto.PdfUploadResponse;
 import com.hrchatbot.entity.PdfDocument;
+import com.hrchatbot.entity.PdfDocumentStatus;
 import com.hrchatbot.entity.User;
 import com.hrchatbot.repository.PdfDocumentRepository;
 import com.hrchatbot.service.PineconeService;
-import com.hrchatbot.service.impl.PdfProcessingServiceImpl;
+import com.hrchatbot.service.PdfProcessingService;
 import com.hrchatbot.service.impl.UserServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +34,7 @@ import java.util.stream.Collectors;
 public class PdfController {
 
     private final PdfDocumentRepository pdfDocumentRepository;
-    private final PdfProcessingServiceImpl pdfProcessingService;
+    private final PdfProcessingService pdfProcessingService;
     private final UserServiceImpl userService;
     private final PineconeService pineconeService;
 
@@ -83,16 +84,21 @@ public class PdfController {
                     .filePath(filePath.toString())
                     .fileSize(file.getSize())
                     .indexed(false)
+                    .status(PdfDocumentStatus.PROCESSING)
                     .build();
             
             pdfDocument = pdfDocumentRepository.save(pdfDocument);
             
-            // Process and index PDF asynchronously
+            // Process and index PDF synchronously
             try {
                 pdfProcessingService.processAndIndexPdf(pdfDocument, file);
+                log.info("PDF processing completed for: {}", pdfDocument.getFileName());
             } catch (Exception e) {
                 log.error("Error processing PDF: {}", e.getMessage());
-                // Don't fail the upload, just mark as not indexed
+                // Mark as failed if processing fails
+                pdfDocument.setIndexed(false);
+                pdfDocument.setStatus(PdfDocumentStatus.FAILED);
+                pdfDocumentRepository.save(pdfDocument);
             }
             
             return ResponseEntity.ok(PdfUploadResponse.builder()
@@ -179,6 +185,7 @@ public class PdfController {
                 .fileName(document.getFileName())
                 .fileSize(document.getFileSize())
                 .indexed(document.getIndexed())
+                .status(document.getStatus())
                 .summary(document.getSummary())
                 .createdAt(document.getCreatedAt())
                 .build();

@@ -75,7 +75,7 @@ const ChatPage = () => {
                   <h1 className={`text-xl font-bold ${
                     isDarkMode ? 'text-white' : 'text-gray-900'
                   }`}>
-                    {selectedRoom ? selectedRoom.name : 'HR Assistant'}
+                    {selectedRoom ? selectedRoom.name : 'HR Assist'}
                   </h1>
                   <p className={`text-sm ${
                     isDarkMode ? 'text-gray-400' : 'text-gray-600'
@@ -142,14 +142,14 @@ const ChatPage = () => {
                 <h3 className={`text-3xl font-bold mb-4 ${
                   isDarkMode ? 'text-white' : 'text-gray-900'
                 }`}>
-                  Welcome to HR Assistant
+                  Welcome to HR Assist
                 </h3>
                 
                 <p className={`text-lg mb-12 leading-relaxed max-w-2xl mx-auto ${
                   isDarkMode ? 'text-gray-300' : 'text-gray-600'
                 }`}>
-                  Your intelligent AI assistant for HR queries, document analysis, and workplace guidance. 
-                  Select a chat room to start your conversation.
+                  Your go-to HR assistant for quick answers and workplace guidance. 
+                  Start a chat room and ask away.
                 </p>
                 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
@@ -165,10 +165,10 @@ const ChatPage = () => {
                     </div>
                     <h4 className={`text-lg font-semibold mb-2 ${
                       isDarkMode ? 'text-white' : 'text-gray-900'
-                    }`}>Upload Documents</h4>
+                    }`}>Ask Questions</h4>
                     <p className={`text-sm ${
                       isDarkMode ? 'text-gray-300' : 'text-gray-600'
-                    }`}>Upload PDFs and get intelligent answers based on your documents</p>
+                    }`}>Get instant answers from company knowledge</p>
                   </div>
                   
                   <div className={`rounded-xl p-6 shadow-sm ${
@@ -186,7 +186,7 @@ const ChatPage = () => {
                     }`}>Chat Rooms</h4>
                     <p className={`text-sm ${
                       isDarkMode ? 'text-gray-300' : 'text-gray-600'
-                    }`}>Organize conversations by topic and maintain context</p>
+                    }`}>Organize conversations by topic</p>
                   </div>
                   
                   <div className={`rounded-xl p-6 shadow-sm ${
@@ -202,10 +202,10 @@ const ChatPage = () => {
                     </div>
                     <h4 className={`text-lg font-semibold mb-2 ${
                       isDarkMode ? 'text-white' : 'text-gray-900'
-                    }`}>AI Settings</h4>
+                    }`}>Smart Context</h4>
                     <p className={`text-sm ${
                       isDarkMode ? 'text-gray-300' : 'text-gray-600'
-                    }`}>Customize your AI experience and choose providers</p>
+                    }`}>Continue chats without losing history</p>
                   </div>
                 </div>
               </div>

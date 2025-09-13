@@ -1,5 +1,6 @@
 package com.hrchatbot.dto;
 
+import com.hrchatbot.entity.PdfDocumentStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,6 +18,7 @@ public class PdfDocumentDto {
     private String fileName;
     private Long fileSize;
     private Boolean indexed;
+    private PdfDocumentStatus status;
     private String summary;
     private LocalDateTime createdAt;
 }

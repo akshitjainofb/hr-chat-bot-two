@@ -139,46 +139,77 @@ public class PineconeServiceImpl implements PineconeService {
                 continue;
             }
 
-            // Paragraph too big → split by lines
-            String[] lines = trimmedParagraph.split("\\r?\\n");
-            boolean isFirstLineOfParagraph = true;
+            // Paragraph too big → split by sentences first, then by lines if needed
+            List<String> sentences = splitIntoSentences(trimmedParagraph);
+            boolean isFirstSentenceOfParagraph = true;
 
-            for (String line : lines) {
-                String trimmedLine = line.trim();
-                if (trimmedLine.isEmpty()) {
-                    if (currentChunk.length() + 1 <= chunkSize) {
-                        currentChunk.append("\n");
-                    } else if (currentChunk.length() > 0) {
-                        chunks.add(currentChunk.toString().trim());
-                        currentChunk = new StringBuilder();
-                    }
-                    isFirstLineOfParagraph = false;
+            for (String sentence : sentences) {
+                String trimmedSentence = sentence.trim();
+                if (trimmedSentence.isEmpty()) continue;
+
+                // Calculate separator length
+                int sepLen = isFirstSentenceOfParagraph ? 
+                    (currentChunk.length() > 0 ? 2 : 0) : // new paragraph needs "\n\n"
+                    (currentChunk.length() > 0 ? 1 : 0);  // normal sentence needs "\n"
+
+                // If sentence fits in current chunk, add it
+                if (currentChunk.length() + sepLen + trimmedSentence.length() <= chunkSize) {
+                    if (sepLen == 2) currentChunk.append("\n\n");
+                    else if (sepLen == 1) currentChunk.append("\n");
+                    currentChunk.append(trimmedSentence);
+                    isFirstSentenceOfParagraph = false;
                     continue;
                 }
 
-                List<String> segments = splitLongLine(trimmedLine, chunkSize);
+                // Sentence doesn't fit → start new chunk (NEVER break a sentence in the middle)
+                if (currentChunk.length() > 0) {
+                    chunks.add(currentChunk.toString().trim());
+                    currentChunk = new StringBuilder();
+                }
+                
+                // If the sentence itself is too big, split by lines but keep lines intact
+                if (trimmedSentence.length() > chunkSize) {
+                    String[] lines = trimmedSentence.split("\\r?\\n");
+                    boolean isFirstLineOfSentence = true;
 
-                for (String seg : segments) {
-                    int sepLen;
-                    if (isFirstLineOfParagraph) {
-                        sepLen = currentChunk.length() > 0 ? 2 : 0; // new paragraph needs "\n\n"
-                        isFirstLineOfParagraph = false;
-                    } else {
-                        sepLen = currentChunk.length() > 0 ? 1 : 0; // normal line needs "\n"
-                    }
+                    for (String line : lines) {
+                        String trimmedLine = line.trim();
+                        if (trimmedLine.isEmpty()) {
+                            if (currentChunk.length() + 1 <= chunkSize) {
+                                currentChunk.append("\n");
+                            } else if (currentChunk.length() > 0) {
+                                chunks.add(currentChunk.toString().trim());
+                                currentChunk = new StringBuilder();
+                            }
+                            isFirstLineOfSentence = false;
+                            continue;
+                        }
 
-                    if (currentChunk.length() + sepLen + seg.length() <= chunkSize) {
-                        if (sepLen == 2) currentChunk.append("\n\n");
-                        else if (sepLen == 1) currentChunk.append("\n");
-                        currentChunk.append(seg);
-                    } else {
+                        // Calculate separator length for line
+                        int lineSepLen = isFirstLineOfSentence ? 
+                            (currentChunk.length() > 0 ? 1 : 0) : 1;
+
+                        // If line fits in current chunk, add it
+                        if (currentChunk.length() + lineSepLen + trimmedLine.length() <= chunkSize) {
+                            if (lineSepLen == 1) currentChunk.append("\n");
+                            currentChunk.append(trimmedLine);
+                            isFirstLineOfSentence = false;
+                            continue;
+                        }
+
+                        // Line doesn't fit → start new chunk (NEVER break a line in the middle)
                         if (currentChunk.length() > 0) {
                             chunks.add(currentChunk.toString().trim());
                             currentChunk = new StringBuilder();
                         }
-                        currentChunk.append(seg);
+                        currentChunk.append(trimmedLine);
+                        isFirstLineOfSentence = false;
                     }
+            } else {
+                    // Sentence fits in a single chunk
+                    currentChunk.append(trimmedSentence);
                 }
+                isFirstSentenceOfParagraph = false;
             }
         }
 
@@ -189,37 +220,30 @@ public class PineconeServiceImpl implements PineconeService {
         return chunks;
     }
 
-    private List<String> splitLongLine(String line, int chunkSize) {
-        List<String> parts = new ArrayList<>();
-        int len = line.length();
-        int start = 0;
-
-        while (start < len) {
-            int end = Math.min(start + chunkSize, len);
-
-            if (end == len) {
-                String part = line.substring(start, end).trim();
-                if (!part.isEmpty()) parts.add(part);
-                break;
-            }
-
-            int lastSpace = -1;
-            for (int i = end; i > start; i--) {
-                if (Character.isWhitespace(line.charAt(i - 1))) {
-                    lastSpace = i - 1;
-                    break;
-                }
-            }
-
-            int cut = (lastSpace > start) ? lastSpace : end;
-            String part = line.substring(start, cut).trim();
-            if (!part.isEmpty()) parts.add(part);
-
-            start = (cut == end) ? end : cut + 1;
+    private List<String> splitIntoSentences(String text) {
+        List<String> sentences = new ArrayList<>();
+        if (text == null || text.isEmpty()) {
+            return sentences;
         }
 
-        return parts;
+        // Split by sentence endings, but be careful with abbreviations
+        String[] parts = text.split("(?<=[.!?])\\s+");
+        
+        for (String part : parts) {
+            String trimmed = part.trim();
+            if (!trimmed.isEmpty()) {
+                sentences.add(trimmed);
+            }
+        }
+
+        // If no sentences were found (no sentence endings), treat the whole text as one sentence
+        if (sentences.isEmpty()) {
+            sentences.add(text.trim());
+        }
+
+        return sentences;
     }
+
 
 
     @Override
@@ -384,48 +408,81 @@ public class PineconeServiceImpl implements PineconeService {
         try {
             Index index = index();
             
+            log.info("Starting deletion of PDF document {} for user {}", pdfDocument.getId(), user.getEmail());
+            
             // Search for all records related to this PDF document
             Map<String, Object> filter = new HashMap<>();
             filter.put("user_id", user.getId().toString());
             filter.put("document_id", pdfDocument.getId().toString());
-            filter.put("type", "document");
             
-            SearchRecordsResponse response = index.searchRecordsByText(
-                "", // Empty query to get all records
-                "hr-knowledge-base", // Use the main namespace
-                List.of("id"), 
-                1000, // Get up to 1000 records
-                filter, 
-                null
-            );
+            log.info("Searching for records with filter: {}", filter);
             
-            if (response.getResult() != null && response.getResult().getHits() != null) {
+            // Try to search for records using a simple query
+            SearchRecordsResponse response;
+            try {
+                response = index.searchRecordsByText(
+                    "document", // Simple query to get records
+                    "hr-policies", // Use the correct namespace
+                    List.of("id"), 
+                    1000, // Get up to 1000 records
+                    filter, 
+                    null
+                );
+            } catch (Exception searchError) {
+                log.warn("Text search failed, likely no records found or embedding error: {}", searchError.getMessage());
+                log.info("No PDF document records found in Pinecone for document {} and user {}", 
+                        pdfDocument.getId(), user.getEmail());
+                return; // Exit early if no records found
+            }
+            
+            log.info("Search response: {}", response);
+            
+            if (response.getResult() != null && response.getResult().getHits() != null && !response.getResult().getHits().isEmpty()) {
                 List<String> idsToDelete = new ArrayList<>();
                 response.getResult().getHits().forEach(hit -> {
-                    Object fieldsObj = hit.getFields();
-                    if (fieldsObj instanceof java.util.Map<?, ?> map) {
-                        Object idVal = map.get("id");
-                        if (idVal != null) {
-                            idsToDelete.add(String.valueOf(idVal));
-                        }
+                    // The ID is directly on the Hit object, not in fields
+                    String hitId = hit.getId();
+                    if (hitId != null && !hitId.trim().isEmpty()) {
+                        idsToDelete.add(hitId);
+                        log.debug("Found record to delete: {}", hitId);
                     }
                 });
                 
-                // Delete records by ID
+                // Delete records by ID only if we have valid IDs
                 if (!idsToDelete.isEmpty()) {
                     try {
-                        // Delete by IDs - this method should exist in the Pinecone client
-                        index.deleteByIds(idsToDelete, "hr-knowledge-base");
+                        // Try to delete by IDs with namespace
+                        index.deleteByIds(idsToDelete, "hr-policies");
                         log.info("Successfully deleted {} PDF document records from Pinecone for document {} and user {}", 
                                 idsToDelete.size(), pdfDocument.getId(), user.getEmail());
                     } catch (Exception deleteError) {
-                        log.warn("Could not delete PDF document records from Pinecone: {}", deleteError.getMessage());
-                        // Continue with document deletion even if Pinecone cleanup fails
+                        log.warn("Could not delete PDF document records with namespace: {}", deleteError.getMessage());
+                        // Try alternative deletion method - delete by IDs without namespace
+                        try {
+                            index.deleteByIds(idsToDelete);
+                            log.info("Successfully deleted {} PDF document records using ID deletion without namespace", idsToDelete.size());
+                        } catch (Exception altDeleteError) {
+                            log.warn("ID deletion without namespace also failed: {}", altDeleteError.getMessage());
+                            // Try deleting one by one
+                            try {
+                                for (String id : idsToDelete) {
+                                    if (id != null && !id.trim().isEmpty()) {
+                                        index.deleteByIds(List.of(id));
+                                    }
+                                }
+                                log.info("Successfully deleted {} PDF document records using individual ID deletion", idsToDelete.size());
+                            } catch (Exception finalDeleteError) {
+                                log.error("All deletion methods failed: {}", finalDeleteError.getMessage());
+                            }
+                        }
                     }
                 } else {
-                    log.info("No PDF document records found in Pinecone for document {} and user {}", 
+                    log.info("No valid PDF document record IDs found in Pinecone for document {} and user {}", 
                             pdfDocument.getId(), user.getEmail());
                 }
+            } else {
+                log.info("No PDF document records found in Pinecone for document {} and user {}", 
+                        pdfDocument.getId(), user.getEmail());
             }
             
         } catch (Exception e) {

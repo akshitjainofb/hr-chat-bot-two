@@ -41,6 +41,10 @@ public class PdfDocument {
     @Column(name = "indexed", nullable = false)
     private Boolean indexed = false;
     
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private PdfDocumentStatus status = PdfDocumentStatus.PROCESSING;
+    
     @Column(name = "pinecone_id")
     private String pineconeId;
     
