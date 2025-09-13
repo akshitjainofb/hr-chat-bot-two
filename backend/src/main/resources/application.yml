@@ -1,0 +1,89 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+spring:
+  application:
+    name: hr-chatbot-backend
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/hr_chatbot?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: hruser
+    password: hrpassword
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        format_sql: true
+  
+
+# LLM Configuration
+llm:
+  default: openai
+  providers:
+    openai:
+      api-key: ${OPENAI_API_KEY:your-openai-key}
+      model: gpt-3.5-turbo
+      enabled: true
+      max-tokens: 1000
+      temperature: 0.7
+      timeout: 30
+    gemini:
+      api-key: ${GEMINI_API_KEY:AIzaSyCY1IzmYc3IQELETcTm-DZY9tlybh_LLoc}
+      model: gemini-2.5-flash
+      enabled: true
+      max-tokens: 1000
+      temperature: 0.7
+      timeout: 30
+    huggingface:
+      api-key: ${HUGGINGFACE_API_KEY:your-huggingface-key}
+      model: microsoft/DialoGPT-large
+      enabled: true
+      max-tokens: 200
+      temperature: 0.7
+      timeout: 30
+
+# Pinecone Configuration
+pinecone:
+  api-key: ${PINECONE_API_KEY:pcsk_4tum2B_AHPtNM6AMkXSWiXhPUzRhV4Y4bL6jd12kK49Ks1XunWLyFMtpPah7HxrpWefiD8}
+  index-name: ${PINECONE_INDEX_NAME:hr-knowledge-base}
+
+# File Upload Configuration
+file:
+  upload-dir: ${FILE_UPLOAD_DIR:./uploads}
+  max-file-size: 10MB
+  max-request-size: 10MB
+
+# Memory Configuration
+memory:
+  token-limit: ${MEMORY_TOKEN_LIMIT:2000}
+  long-term-memory-limit: ${MEMORY_LONG_TERM_LIMIT:5}
+  document-context-limit: ${MEMORY_DOCUMENT_LIMIT:5}
+  archive-batch-size: ${MEMORY_ARCHIVE_BATCH_SIZE:20}
+
+# CORS Configuration
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
+  allowed-methods: GET,POST,PUT,DELETE,OPTIONS
+  allowed-headers: "*"
+  allow-credentials: true
+
+# Logging
+logging:
+  level:
+    com.hrchatbot: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.web: DEBUG
+    org.springframework.boot: INFO
+    org.hibernate: INFO
+    org.springframework.orm: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
