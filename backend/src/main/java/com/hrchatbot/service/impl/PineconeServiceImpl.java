@@ -92,7 +92,7 @@ public class PineconeServiceImpl implements PineconeService {
             }
             
             // Upsert records to Pinecone
-            index.upsertRecords("hr-policies", records);
+            index.upsertRecords("hr-policies-final", records);
             
             log.info("Successfully indexed PDF document: {} with {} chunks", pdfDocument.getFileName(), chunks.size());
             
@@ -114,7 +114,7 @@ public class PineconeServiceImpl implements PineconeService {
             log.debug("Searching Pinecone for query: '{}' with topK: {}", query, topK);
             SearchRecordsResponse response = index.searchRecordsByText(
                 query,
-                "hr-policies",
+                "hr-policies-final",
                 fields, 
                 topK, 
                 null, 
@@ -463,7 +463,7 @@ public class PineconeServiceImpl implements PineconeService {
             try {
                 response = index.searchRecordsByText(
                     "document", // Simple query to get records
-                    "hr-policies", // Use the correct namespace
+                    "hr-policies-final", // Use the correct namespace
                     List.of("id"), 
                     1000, // Get up to 1000 records
                     filter, 
@@ -493,7 +493,7 @@ public class PineconeServiceImpl implements PineconeService {
                 if (!idsToDelete.isEmpty()) {
                     try {
                         // Try to delete by IDs with namespace
-                        index.deleteByIds(idsToDelete, "hr-policies");
+                        index.deleteByIds(idsToDelete, "hr-policies-final");
                         log.info("Successfully deleted {} PDF document records from Pinecone for document {} and user {}", 
                                 idsToDelete.size(), pdfDocument.getId(), user.getEmail());
                     } catch (Exception deleteError) {

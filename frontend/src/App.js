@@ -8,6 +8,7 @@ import SignupPage from './pages/SignupPage';
 import ChatPage from './pages/ChatPage';
 import SettingsPage from './pages/SettingsPage';
 import AdminPage from './pages/AdminPage';
+import PdfUploadPage from './pages/PdfUploadPage';
 import LoadingSpinner from './components/LoadingSpinner';
 
 function AppContent() {
@@ -31,7 +32,7 @@ function AppContent() {
             <>
               <Route path="/" element={<Navigate to="/chat" replace />} />
               <Route path="/chat" element={<ChatPage />} />
-              <Route path="/upload" element={<Navigate to="/admin" replace />} />
+              <Route path="/upload" element={<PdfUploadPage />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/admin" element={<AdminPage />} />
               <Route path="*" element={<Navigate to="/chat" replace />} />
