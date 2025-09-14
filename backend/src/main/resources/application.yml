@@ -63,14 +63,14 @@ llm:
       max-tokens: 500  # Optimized for performance
       temperature: 0.5  # Optimized for consistency
       timeout: 15  # Reduced timeout
-    local-huggingface:
+    ollama:
       api-key: ""  # No API key needed for local models
-      model: microsoft/DialoGPT-medium  # Can be overridden with system property hf.model.size
+      model: ${OLLAMA_MODEL:mistral:7b-instruct}  # Change this to your preferred model
       enabled: true
       max-tokens: 500  # Optimized for performance
       temperature: 0.5  # Optimized for consistency
-      timeout: 30  # Local models optimized timeout
-
+      timeout: 15  # Optimized timeout
+      base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
 # Pinecone Configuration
 pinecone:
   api-key: ${PINECONE_API_KEY:pcsk_4tum2B_AHPtNM6AMkXSWiXhPUzRhV4Y4bL6jd12kK49Ks1XunWLyFMtpPah7HxrpWefiD8}
@@ -97,14 +97,6 @@ local-models:
   preferred-size: ${LOCAL_MODEL_SIZE:medium}  # small, medium, large, best
   use-gpu: ${LOCAL_MODEL_USE_GPU:false}
   memory-limit-mb: ${LOCAL_MODEL_MEMORY_LIMIT:2048}
-
-# Ollama Configuration
-ollama:
-  base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
-  model: ${OLLAMA_MODEL:gemma:2b-instruct}  # Change this to your preferred model
-  timeout: ${OLLAMA_TIMEOUT:15}  # Optimized timeout
-  temperature: ${OLLAMA_TEMPERATURE:0.5}  # Optimized temperature
-  max-tokens: ${OLLAMA_MAX_TOKENS:500}  # Optimized max tokens
 
 # CORS Configuration
 cors:

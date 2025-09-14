@@ -20,7 +20,7 @@ const ChatPage = () => {
     }`}>
       {/* Sidebar */}
       <div
-        className={`fixed inset-y-0 left-0 z-50 w-80 ${
+        className={`fixed inset-y-0 left-0 z-50 w-72 sm:w-80 ${
           isDarkMode 
             ? 'bg-gray-800/95 shadow-xl border-r border-gray-700/50' 
             : 'bg-white/95 shadow-xl border-r border-gray-200/50'
@@ -51,7 +51,7 @@ const ChatPage = () => {
           isDarkMode 
             ? 'bg-gray-800 shadow-sm border-b border-gray-700' 
             : 'bg-white shadow-sm border-b border-gray-200'
-        } px-6 py-4`}>
+        } px-3 sm:px-6 py-4`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <button
@@ -67,19 +67,19 @@ const ChatPage = () => {
                 </svg>
               </button>
               
-              <div className="flex items-center space-x-4">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-sm">
-                  <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="flex items-center space-x-2 sm:space-x-4">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-sm">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                   </svg>
                 </div>
                 <div>
-                  <h1 className={`text-xl font-bold ${
+                  <h1 className={`text-lg sm:text-xl font-bold ${
                     isDarkMode ? 'text-white' : 'text-gray-900'
                   }`}>
                     {selectedRoom ? selectedRoom.name : 'HR Assist'}
                   </h1>
-                  <p className={`text-sm ${
+                  <p className={`text-xs sm:text-sm ${
                     isDarkMode ? 'text-gray-400' : 'text-gray-600'
                   }`}>
                     {selectedRoom ? 'Chat with your AI assistant' : 'Select a chat room to start'}
@@ -137,20 +137,20 @@ const ChatPage = () => {
                 ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-700' 
                 : 'bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100'
             }`}>
-              <div className="text-center max-w-4xl mx-auto px-8">
-                <div className="w-32 h-32 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-8 shadow-lg">
-                  <svg className="w-16 h-16 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="text-center max-w-4xl mx-auto px-4 sm:px-8">
+                <div className="w-24 h-24 sm:w-32 sm:h-32 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6 sm:mb-8 shadow-lg">
+                  <svg className="w-12 h-12 sm:w-16 sm:h-16 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                   </svg>
                 </div>
                 
-                <h3 className={`text-3xl font-bold mb-4 ${
+                <h3 className={`text-2xl sm:text-3xl font-bold mb-4 ${
                   isDarkMode ? 'text-white' : 'text-gray-900'
                 }`}>
                   Welcome to HR Assist
                 </h3>
                 
-                <p className={`text-lg mb-12 leading-relaxed max-w-2xl mx-auto ${
+                <p className={`text-base sm:text-lg mb-8 sm:mb-12 leading-relaxed max-w-2xl mx-auto ${
                   isDarkMode ? 'text-gray-300' : 'text-gray-600'
                 }`}>
                   Your go-to HR assistant for quick answers and workplace guidance. 

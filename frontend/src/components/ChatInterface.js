@@ -362,20 +362,20 @@ const ChatInterface = ({ room, onRoomUpdate }) => {
     
     return (
       <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-2`}>
-        <div className={`flex max-w-md lg:max-w-lg xl:max-w-xl items-end ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
+        <div className={`flex max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl items-end ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
           {/* Avatar */}
-          <div className={`w-10 h-10 flex-shrink-0 rounded-full flex items-center justify-center text-sm font-bold ${isUser ? 'ml-3' : 'mr-3'} ${
+          <div className={`w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold ${isUser ? 'ml-2 sm:ml-3' : 'mr-2 sm:mr-3'} ${
             isUser 
               ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-sm' 
               : isDarkMode
                 ? 'bg-gray-600 text-gray-200 border border-gray-500'
                 : 'bg-gray-200 text-gray-700 border border-gray-300'
           }`}>
-            {isUser ? getUserInitials() : 'AI'}
+            {isUser ? getUserInitials() : 'HR'}
           </div>
           
           {/* Message content */}
-          <div className={`flex-1 px-3 py-2 rounded-2xl shadow-sm ${
+          <div className={`flex-1 px-3 py-2 sm:px-4 sm:py-3 rounded-2xl shadow-sm ${
             isUser 
               ? isDarkMode
                 ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-br-lg border border-blue-500/20'
@@ -384,7 +384,7 @@ const ChatInterface = ({ room, onRoomUpdate }) => {
                 ? 'bg-gray-800 text-gray-100 border border-gray-600 rounded-bl-lg'
                 : 'bg-white text-gray-900 border border-gray-200 rounded-bl-lg'
           }`}>
-            <div className="text-sm leading-relaxed prose prose-sm max-w-none">
+            <div className="text-xs sm:text-sm leading-relaxed prose prose-sm max-w-none">
               <ReactMarkdown 
                 remarkPlugins={[remarkGfm]}
                 components={{
@@ -462,7 +462,7 @@ const ChatInterface = ({ room, onRoomUpdate }) => {
 
 
       {/* Messages area */}
-      <div className="flex-1 overflow-y-auto px-6 py-4 relative z-10">
+      <div className="flex-1 overflow-y-auto px-3 sm:px-6 py-4 relative z-10">
         <div className="max-w-4xl mx-auto">
           {messages.length === 0 && !isLoading && (
             <div className="text-center py-12">
@@ -471,10 +471,10 @@ const ChatInterface = ({ room, onRoomUpdate }) => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
               </div>
-              <h3 className={`text-2xl font-bold mb-3 ${
+              <h3 className={`text-xl sm:text-2xl font-bold mb-3 ${
                 isDarkMode ? 'text-white' : 'text-gray-800'
               }`}>Start a conversation</h3>
-              <p className={`text-lg ${
+              <p className={`text-base sm:text-lg ${
                 isDarkMode ? 'text-gray-300' : 'text-gray-600'
               }`}>Ask me anything about your documents or general questions!</p>
             </div>
@@ -494,35 +494,35 @@ const ChatInterface = ({ room, onRoomUpdate }) => {
       </div>
 
       {/* Input area */}
-      <div className={`px-6 py-4 ${
+      <div className={`px-3 sm:px-6 py-4 ${
         isDarkMode 
           ? 'bg-gray-800/50 border-t border-gray-700/50' 
           : 'bg-white/30 border-t border-gray-200/50'
       }`}>
         <div className="max-w-4xl mx-auto">
-          <form onSubmit={sendMessage} className="flex items-center space-x-4">
+          <form onSubmit={sendMessage} className="flex items-center space-x-2 sm:space-x-4">
             <div className="flex-1 relative">
               <input
                 type="text"
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
                 placeholder="Type your message..."
-                className={`w-full px-6 py-4 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm shadow-sm ${
+                className={`w-full px-4 sm:px-6 py-3 sm:py-4 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm shadow-sm ${
                   isDarkMode
                     ? 'bg-gray-700 border border-gray-600 text-white placeholder-gray-400'
                     : 'bg-white border border-gray-300 text-gray-900 placeholder-gray-500'
                 }`}
                 disabled={isLoading}
               />
-              <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-                <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                 </svg>
               </div>
             </div>
             
             {/* Context Toggle Button */}
-            <div className="relative">
+            <div className="relative hidden sm:block">
               <button
                 type="button"
                 onClick={async () => {
@@ -649,9 +649,9 @@ const ChatInterface = ({ room, onRoomUpdate }) => {
               <button
                 type="submit"
                 disabled={!inputMessage.trim()}
-                className="h-12 px-6 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-2xl shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center justify-center"
+                className="h-10 sm:h-12 px-4 sm:px-6 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-2xl shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center justify-center"
               >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
               </button>

@@ -135,8 +135,8 @@ const SettingsPage = () => {
       icon: '🤗',
       color: 'bg-purple-100 text-purple-800'
     },
-    'local-huggingface': {
-      name: 'Hugging Face (Local)',
+    'ollama': {
+      name: 'Ollama (Local)',
       description: 'Run models locally - no API key needed, completely private',
       icon: '🏠',
       color: 'bg-orange-100 text-orange-800'

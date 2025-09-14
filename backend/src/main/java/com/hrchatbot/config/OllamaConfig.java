@@ -8,14 +8,14 @@ import org.springframework.context.annotation.Configuration;
  * Configuration for Ollama local model service
  */
 @Configuration
-@ConfigurationProperties(prefix = "ollama")
+@ConfigurationProperties(prefix = "llm.providers.ollama")
 @Data
 public class OllamaConfig {
     
     /**
-     * Ollama base URL
+     * API key (empty for local models)
      */
-    private String baseUrl = "http://localhost:11434";
+    private String apiKey = "";
     
     /**
      * Model to use (configured in application.yml)
@@ -23,19 +23,29 @@ public class OllamaConfig {
     private String model;
     
     /**
-     * Request timeout in seconds
+     * Whether this provider is enabled
      */
-    private int timeout = 30;
-    
-    /**
-     * Temperature for generation (0.0 to 1.0)
-     */
-    private double temperature = 0.7;
+    private boolean enabled = true;
     
     /**
      * Maximum tokens to generate
      */
     private int maxTokens = 500;
+    
+    /**
+     * Temperature for generation (0.0 to 1.0)
+     */
+    private double temperature = 0.5;
+    
+    /**
+     * Request timeout in seconds
+     */
+    private int timeout = 15;
+    
+    /**
+     * Ollama base URL
+     */
+    private String baseUrl = "http://localhost:11434";
     
     /**
      * Check if Ollama is available

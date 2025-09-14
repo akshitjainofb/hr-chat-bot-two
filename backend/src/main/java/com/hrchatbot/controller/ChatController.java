@@ -5,6 +5,7 @@ import com.hrchatbot.dto.ChatRequest;
 import com.hrchatbot.dto.ChatResponse;
 import com.hrchatbot.dto.ChatRoomDto;
 import com.hrchatbot.entity.User;
+import com.hrchatbot.exception.UserNotFoundException;
 import com.hrchatbot.service.PineconeService;
 import com.hrchatbot.service.impl.ChatServiceImpl;
 import com.hrchatbot.service.impl.UserServiceImpl;
@@ -105,7 +106,7 @@ public class ChatController {
             
             // Get user by email
             User user = userService.findByEmail(userEmail)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
             
             ChatRoomDto room = chatService.createChatRoom(name.trim(), user);
             return ResponseEntity.ok(room);

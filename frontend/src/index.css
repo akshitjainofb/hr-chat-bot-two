@@ -26,7 +26,7 @@
   }
   
   .message-bubble {
-    @apply max-w-xs lg:max-w-md px-4 py-2 rounded-lg;
+    @apply max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl px-3 sm:px-4 py-2 sm:py-3 rounded-lg;
   }
   
   .message-user {
@@ -92,6 +92,30 @@
 
 .signup-input::-moz-placeholder {
   color: #9CA3AF !important;
+}
+
+/* Mobile-specific improvements */
+@media (max-width: 640px) {
+  /* Improve touch targets */
+  button, input, select, textarea {
+    min-height: 44px;
+  }
+  
+  /* Better spacing for mobile */
+  .mobile-padding {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+  
+  /* Prevent zoom on input focus */
+  input[type="text"], input[type="email"], input[type="password"], textarea {
+    font-size: 16px;
+  }
+  
+  /* Better mobile scrolling */
+  .mobile-scroll {
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 .signup-input:-ms-input-placeholder {

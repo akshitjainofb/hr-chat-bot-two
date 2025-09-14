@@ -8,6 +8,9 @@ import com.hrchatbot.dto.ConversationMemory;
 import com.hrchatbot.entity.ChatMessage;
 import com.hrchatbot.entity.ChatRoom;
 import com.hrchatbot.entity.User;
+import com.hrchatbot.exception.ChatRoomAlreadyExistsException;
+import com.hrchatbot.exception.ChatRoomNotFoundException;
+import com.hrchatbot.exception.UnauthorizedAccessException;
 import com.hrchatbot.repository.ChatMessageRepository;
 import com.hrchatbot.repository.ChatRoomRepository;
 import com.hrchatbot.service.ConversationMemoryService;
@@ -149,7 +152,7 @@ public class ChatServiceImpl {
     @Transactional
     public ChatRoomDto createChatRoom(String name, User user) {
         if (chatRoomRepository.existsByUserAndName(user, name)) {
-            throw new RuntimeException("Chat room with this name already exists");
+            throw new ChatRoomAlreadyExistsException("A chat room with the name '" + name + "' already exists");
         }
         
         ChatRoom chatRoom = ChatRoom.builder()
@@ -164,10 +167,15 @@ public class ChatServiceImpl {
     @Transactional
     public ChatRoomDto updateChatRoom(Long roomId, String name, User user) {
         ChatRoom chatRoom = chatRoomRepository.findById(roomId)
-                .orElseThrow(() -> new RuntimeException("Chat room not found"));
+                .orElseThrow(() -> new ChatRoomNotFoundException("Chat room not found"));
         
         if (!chatRoom.getUser().getId().equals(user.getId())) {
-            throw new RuntimeException("Unauthorized access to chat room");
+            throw new UnauthorizedAccessException("You don't have permission to modify this chat room");
+        }
+        
+        // Check if another chat room with the same name exists (excluding current room)
+        if (chatRoomRepository.existsByUserAndNameAndIdNot(user, name, roomId)) {
+            throw new ChatRoomAlreadyExistsException("A chat room with the name '" + name + "' already exists");
         }
         
         chatRoom.setName(name);
@@ -178,10 +186,10 @@ public class ChatServiceImpl {
     @Transactional
     public void deleteChatRoom(Long roomId, User user) {
         ChatRoom chatRoom = chatRoomRepository.findById(roomId)
-                .orElseThrow(() -> new RuntimeException("Chat room not found"));
+                .orElseThrow(() -> new ChatRoomNotFoundException("Chat room not found"));
         
         if (!chatRoom.getUser().getId().equals(user.getId())) {
-            throw new RuntimeException("Unauthorized access to chat room");
+            throw new UnauthorizedAccessException("You don't have permission to delete this chat room");
         }
         
         // Clear conversation memory from Pinecone before deleting the chat room

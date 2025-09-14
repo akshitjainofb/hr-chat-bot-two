@@ -45,7 +45,15 @@ const Sidebar = ({ selectedRoom, onRoomSelect, onClose, refreshTrigger }) => {
       }
     } catch (error) {
       console.error('Error fetching chat rooms:', error);
-      toast.error('Failed to load chat rooms');
+      
+      // Handle specific error messages
+      if (error.response?.status === 404) {
+        toast.error('User not found. Please log in again.');
+      } else if (error.response?.data?.error) {
+        toast.error(error.response.data.error);
+      } else {
+        toast.error('Failed to load chat rooms. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -76,7 +84,17 @@ const Sidebar = ({ selectedRoom, onRoomSelect, onClose, refreshTrigger }) => {
       toast.success('Chat room created successfully');
     } catch (error) {
       console.error('Error creating chat room:', error);
-      toast.error('Failed to create chat room');
+      
+      // Handle specific error messages
+      if (error.response?.status === 409) {
+        toast.error('A chat room with this name already exists. Please choose a different name.');
+      } else if (error.response?.status === 404) {
+        toast.error('User not found. Please log in again.');
+      } else if (error.response?.data?.error) {
+        toast.error(error.response.data.error);
+      } else {
+        toast.error('Failed to create chat room. Please try again.');
+      }
     } finally {
       setCreatingRoom(false);
     }
@@ -102,7 +120,17 @@ const Sidebar = ({ selectedRoom, onRoomSelect, onClose, refreshTrigger }) => {
       toast.success('Chat room deleted successfully');
     } catch (error) {
       console.error('Error deleting chat room:', error);
-      toast.error('Failed to delete chat room');
+      
+      // Handle specific error messages
+      if (error.response?.status === 404) {
+        toast.error('Chat room not found.');
+      } else if (error.response?.status === 403) {
+        toast.error('You don\'t have permission to delete this chat room.');
+      } else if (error.response?.data?.error) {
+        toast.error(error.response.data.error);
+      } else {
+        toast.error('Failed to delete chat room. Please try again.');
+      }
     } finally {
       setDeletingRoom(null);
     }
@@ -144,7 +172,19 @@ const Sidebar = ({ selectedRoom, onRoomSelect, onClose, refreshTrigger }) => {
       toast.success('Room name updated successfully');
     } catch (error) {
       console.error('Error updating room:', error);
-      toast.error('Failed to update room name');
+      
+      // Handle specific error messages
+      if (error.response?.status === 409) {
+        toast.error('A chat room with this name already exists. Please choose a different name.');
+      } else if (error.response?.status === 404) {
+        toast.error('Chat room not found.');
+      } else if (error.response?.status === 403) {
+        toast.error('You don\'t have permission to modify this chat room.');
+      } else if (error.response?.data?.error) {
+        toast.error(error.response.data.error);
+      } else {
+        toast.error('Failed to update room name. Please try again.');
+      }
     } finally {
       setUpdatingRoom(false);
     }
@@ -170,12 +210,12 @@ const Sidebar = ({ selectedRoom, onRoomSelect, onClose, refreshTrigger }) => {
         : 'bg-gray-50/95 border-gray-200/50'
     }`}>
       {/* Header */}
-      <div className={`flex items-center justify-between p-6 ${
+      <div className={`flex items-center justify-between p-4 sm:p-6 ${
         isDarkMode 
           ? 'bg-gray-800/80 shadow-lg' 
           : 'bg-white/80 shadow-sm border-b border-gray-200/30'
       }`}>
-        <h2 className={`text-xl font-bold ${
+        <h2 className={`text-lg sm:text-xl font-bold ${
           isDarkMode ? 'text-white' : 'text-gray-900'
         }`}>
           Chat Rooms
@@ -196,7 +236,7 @@ const Sidebar = ({ selectedRoom, onRoomSelect, onClose, refreshTrigger }) => {
 
       {/* New Room Form */}
       {showNewRoomForm && (
-        <div className="p-4">
+        <div className="p-3 sm:p-4">
           <div className={`rounded-xl border border-dashed p-4 ${
             isDarkMode
               ? 'border-blue-500/30 bg-blue-900/10'
@@ -209,15 +249,15 @@ const Sidebar = ({ selectedRoom, onRoomSelect, onClose, refreshTrigger }) => {
                   value={newRoomName}
                   onChange={(e) => setNewRoomName(e.target.value)}
                   placeholder="Enter room name"
-                  className={`w-full px-4 py-2.5 pl-10 rounded-lg text-sm border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${
+                  className={`w-full px-3 sm:px-4 py-2 sm:py-2.5 pl-8 sm:pl-10 rounded-lg text-sm border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${
                     isDarkMode
                       ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:bg-gray-600'
                       : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:bg-gray-50'
                   }`}
                   autoFocus
                 />
-                <div className="absolute inset-y-0 left-0 flex items-center pl-3">
-                  <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-2 sm:pl-3">
+                  <svg className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                   </svg>
                 </div>
@@ -268,7 +308,7 @@ const Sidebar = ({ selectedRoom, onRoomSelect, onClose, refreshTrigger }) => {
           : ''
       }`}>
         {loading ? (
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             <div className="space-y-4">
               {[...Array(3)].map((_, i) => (
                 <div key={i} className="animate-pulse">
@@ -298,12 +338,12 @@ const Sidebar = ({ selectedRoom, onRoomSelect, onClose, refreshTrigger }) => {
             }`}>Create one to get started</p>
           </div>
         ) : (
-          <div className="p-4">
+          <div className="p-3 sm:p-4">
             <div>
               {rooms.map((room, index) => (
                 <div key={room.id}>
                   {editingRoom?.id === room.id ? (
-                    <form onSubmit={updateRoom} className={`mb-3 p-4 rounded-2xl border-2 ${
+                    <form onSubmit={updateRoom} className={`mb-3 p-3 sm:p-4 rounded-2xl border-2 ${
                       isDarkMode
                         ? 'bg-blue-900/20 border-blue-500/50'
                         : 'bg-blue-50 border-blue-300'
@@ -373,10 +413,10 @@ const Sidebar = ({ selectedRoom, onRoomSelect, onClose, refreshTrigger }) => {
                       }`}
                       onClick={() => onRoomSelect(room)}
                     >
-                      <div className="flex items-center justify-between p-4">
+                      <div className="flex items-center justify-between p-3 sm:p-4">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center">
-                            <p className={`text-sm font-medium truncate transition-colors duration-200 ${
+                            <p className={`text-xs sm:text-sm font-medium truncate transition-colors duration-200 ${
                               selectedRoom?.id === room.id
                                 ? isDarkMode 
                                   ? 'text-white' 
@@ -450,7 +490,7 @@ const Sidebar = ({ selectedRoom, onRoomSelect, onClose, refreshTrigger }) => {
       </div>
 
       {/* Navigation */}
-      <div className={`p-6 ${
+      <div className={`p-4 sm:p-6 ${
         isDarkMode 
           ? 'bg-gray-800/80 shadow-lg' 
           : 'bg-white/80 shadow-sm border-t border-gray-200/30'
@@ -461,7 +501,7 @@ const Sidebar = ({ selectedRoom, onRoomSelect, onClose, refreshTrigger }) => {
               key={item.name}
               to={item.href}
               onClick={onClose}
-                className={`flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${
+                className={`flex items-center px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm font-medium rounded-xl transition-all duration-200 ${
                   item.current
                     ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-sm'
                     : isDarkMode
@@ -469,7 +509,7 @@ const Sidebar = ({ selectedRoom, onRoomSelect, onClose, refreshTrigger }) => {
                       : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                 }`}
             >
-              <span className="mr-3 text-lg">{item.icon}</span>
+              <span className="mr-2 sm:mr-3 text-base sm:text-lg">{item.icon}</span>
               {item.name}
             </Link>
           ))}

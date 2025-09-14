@@ -12,4 +12,5 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
     List<ChatRoom> findByUserOrderByCreatedAtDesc(User user);
     List<ChatRoom> findByUserIdOrderByCreatedAtDesc(Long userId);
     boolean existsByUserAndName(User user, String name);
+    boolean existsByUserAndNameAndIdNot(User user, String name, Long id);
 }

@@ -236,7 +236,7 @@ public class LocalHuggingFaceService extends BaseLLMProvider {
     
     @Override
     public String getProviderName() {
-        return "local-huggingface";
+        return "ollama";
     }
     
     @Override

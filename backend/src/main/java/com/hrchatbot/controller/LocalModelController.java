@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Controller for managing local Hugging Face models
+ * Controller for managing local Ollama models
  */
 @RestController
 @RequestMapping("/local-models")
