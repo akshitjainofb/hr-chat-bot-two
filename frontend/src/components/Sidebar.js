@@ -16,6 +16,7 @@ const Sidebar = ({ selectedRoom, onRoomSelect, onClose, refreshTrigger }) => {
   const [editingRoom, setEditingRoom] = useState(null);
   const [editRoomName, setEditRoomName] = useState('');
   const [updatingRoom, setUpdatingRoom] = useState(false);
+  const [deletingRoom, setDeletingRoom] = useState(null);
   const location = useLocation();
 
   useEffect(() => {
@@ -85,6 +86,7 @@ const Sidebar = ({ selectedRoom, onRoomSelect, onClose, refreshTrigger }) => {
     e.stopPropagation();
     if (!window.confirm('Are you sure you want to delete this chat room?')) return;
 
+    setDeletingRoom(roomId);
     try {
       const user = JSON.parse(localStorage.getItem('user'));
       if (!user || !user.email) {
@@ -101,6 +103,8 @@ const Sidebar = ({ selectedRoom, onRoomSelect, onClose, refreshTrigger }) => {
     } catch (error) {
       console.error('Error deleting chat room:', error);
       toast.error('Failed to delete chat room');
+    } finally {
+      setDeletingRoom(null);
     }
   };
 
@@ -417,15 +421,22 @@ const Sidebar = ({ selectedRoom, onRoomSelect, onClose, refreshTrigger }) => {
                           </button>
                           <button
                             onClick={(e) => deleteRoom(room.id, e)}
+                            disabled={deletingRoom === room.id}
                             className={`p-2 rounded-lg transition-all duration-200 ${
-                              isDarkMode
+                              deletingRoom === room.id
+                                ? 'opacity-50 cursor-not-allowed'
+                                : isDarkMode
                                 ? 'text-gray-400 hover:text-red-400 hover:bg-red-900/20'
                                 : 'text-gray-400 hover:text-red-500 hover:bg-red-100/50'
                             }`}
                           >
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
+                            {deletingRoom === room.id ? (
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-500"></div>
+                            ) : (
+                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            )}
                           </button>
                         </div>
                       </div>

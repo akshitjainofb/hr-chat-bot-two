@@ -18,6 +18,7 @@ const ChatInterface = ({ room, onRoomUpdate }) => {
   const [retryCount, setRetryCount] = useState(0);
   const [currentRequest, setCurrentRequest] = useState(null);
   const [includeContext, setIncludeContext] = useState(room?.includeContext ?? true);
+  const [clearingChat, setClearingChat] = useState(false);
   const messagesEndRef = useRef(null);
   const menuRef = useRef(null);
 
@@ -314,6 +315,7 @@ const ChatInterface = ({ room, onRoomUpdate }) => {
   const clearChat = async () => {
     if (!window.confirm('Are you sure you want to clear all messages in this chat?')) return;
 
+    setClearingChat(true);
     try {
       const user = JSON.parse(localStorage.getItem('user'));
       if (!user || !user.email) {
@@ -336,6 +338,8 @@ const ChatInterface = ({ room, onRoomUpdate }) => {
     } catch (error) {
       console.error('Error clearing chat:', error);
       toast.error('Failed to clear chat');
+    } finally {
+      setClearingChat(false);
     }
   };
 
@@ -607,16 +611,23 @@ const ChatInterface = ({ room, onRoomUpdate }) => {
                         clearChat();
                         setShowChatMenu(false);
                       }}
+                      disabled={clearingChat}
                       className={`w-full px-4 py-2 text-left text-sm flex items-center ${
-                        isDarkMode
+                        clearingChat
+                          ? 'opacity-50 cursor-not-allowed'
+                          : isDarkMode
                           ? 'text-red-400 hover:bg-red-900/20'
                           : 'text-red-600 hover:bg-red-50'
                       }`}
                     >
-                      <svg className="w-4 h-4 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                      Clear Chat
+                      {clearingChat ? (
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-500 mr-3"></div>
+                      ) : (
+                        <svg className="w-4 h-4 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      )}
+                      {clearingChat ? 'Clearing...' : 'Clear Chat'}
                     </button>
                   </div>
                 )}

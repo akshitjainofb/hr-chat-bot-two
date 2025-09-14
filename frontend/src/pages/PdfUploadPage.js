@@ -14,6 +14,7 @@ const PdfUploadPage = () => {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
+  const [deletingDocument, setDeletingDocument] = useState(null);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -123,6 +124,7 @@ const PdfUploadPage = () => {
   const deleteDocument = async (documentId) => {
     if (!window.confirm('Are you sure you want to delete this document?')) return;
 
+    setDeletingDocument(documentId);
     try {
       const user = JSON.parse(localStorage.getItem('user'));
       if (!user || !user.email) {
@@ -136,6 +138,8 @@ const PdfUploadPage = () => {
     } catch (error) {
       console.error('Error deleting document:', error);
       toast.error('Failed to delete document');
+    } finally {
+      setDeletingDocument(null);
     }
   };
 
@@ -410,19 +414,29 @@ const PdfUploadPage = () => {
                     
                     <button
                       onClick={() => deleteDocument(document.id)}
-                      disabled={document.status === 'PROCESSING'}
+                      disabled={document.status === 'PROCESSING' || deletingDocument === document.id}
                       className={`p-2 rounded-lg transition-colors duration-200 ${
-                        document.status === 'PROCESSING'
+                        document.status === 'PROCESSING' || deletingDocument === document.id
                           ? 'opacity-50 cursor-not-allowed'
                           : isDarkMode
                             ? 'text-gray-400 hover:text-red-400 hover:bg-red-900/20'
                             : 'text-gray-400 hover:text-red-600 hover:bg-red-50'
                       }`}
-                      title={document.status === 'PROCESSING' ? 'Cannot delete while processing' : 'Delete document'}
+                      title={
+                        document.status === 'PROCESSING' 
+                          ? 'Cannot delete while processing' 
+                          : deletingDocument === document.id 
+                          ? 'Deleting...' 
+                          : 'Delete document'
+                      }
                     >
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
+                      {deletingDocument === document.id ? (
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-500"></div>
+                      ) : (
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      )}
                     </button>
                   </div>
                 ))}
