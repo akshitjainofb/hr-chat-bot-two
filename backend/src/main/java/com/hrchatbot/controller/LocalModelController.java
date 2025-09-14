@@ -31,8 +31,8 @@ public class LocalModelController {
         try {
             Map<String, Object> info = new HashMap<>();
             
-            // Available models
-            info.put("availableModels", localHuggingFaceService.getAvailableModels());
+            // Configured model
+            info.put("configuredModel", localHuggingFaceService.getConfiguredModel());
             
             // Configuration
             Map<String, Object> config = new HashMap<>();

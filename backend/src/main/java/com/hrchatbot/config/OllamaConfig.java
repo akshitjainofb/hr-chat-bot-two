@@ -18,9 +18,9 @@ public class OllamaConfig {
     private String baseUrl = "http://localhost:11434";
     
     /**
-     * Default model to use
+     * Model to use (configured in application.yml)
      */
-    private String defaultModel = "llama2:7b";
+    private String model;
     
     /**
      * Request timeout in seconds

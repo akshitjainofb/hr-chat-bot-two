@@ -101,7 +101,7 @@ local-models:
 # Ollama Configuration
 ollama:
   base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
-  default-model: ${OLLAMA_DEFAULT_MODEL:llama2:7b}
+  model: ${OLLAMA_MODEL:gemma:2b-instruct}  # Change this to your preferred model
   timeout: ${OLLAMA_TIMEOUT:15}  # Optimized timeout
   temperature: ${OLLAMA_TEMPERATURE:0.5}  # Optimized temperature
   max-tokens: ${OLLAMA_MAX_TOKENS:500}  # Optimized max tokens

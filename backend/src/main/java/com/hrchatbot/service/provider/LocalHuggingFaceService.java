@@ -34,20 +34,13 @@ public class LocalHuggingFaceService extends BaseLLMProvider {
     
     // Cache for model status
     private final Map<String, Boolean> modelStatus = new ConcurrentHashMap<>();
-    
-    // Default models for different use cases
-    private static final Map<String, String> RECOMMENDED_MODELS = Map.of(
-        "small", "distilbert-base-uncased", // Fast, lightweight
-        "medium", "microsoft/DialoGPT-medium", // Good for conversations
-        "large", "microsoft/DialoGPT-medium", // Same as medium for consistency
-        "best", "microsoft/DialoGPT-medium" // Same as medium for consistency
-    );
 
     @PostConstruct
     public void initialize() {
         log.info("Initializing Local Hugging Face Service...");
-        log.info("Local models will be available for use");
-        log.info("Note: This is a simplified implementation. For full local model support, additional setup is required.");
+        log.info("Using Ollama model: {}", ollamaConfig.getModel());
+        log.info("Ollama base URL: {}", ollamaConfig.getBaseUrl());
+        log.info("Note: Make sure to run 'ollama pull {}' to download the model", ollamaConfig.getModel());
     }
 
     @Override
@@ -109,7 +102,7 @@ public class LocalHuggingFaceService extends BaseLLMProvider {
             headers.set("User-Agent", "HR-Chatbot/1.0");
             
             Map<String, Object> requestBody = new HashMap<>();
-            requestBody.put("model", getOllamaModelName(modelName));
+            requestBody.put("model", modelName);
             requestBody.put("prompt", prompt);
             requestBody.put("stream", false);
             
@@ -148,20 +141,6 @@ public class LocalHuggingFaceService extends BaseLLMProvider {
         }
     }
     
-    /**
-     * Maps Hugging Face model names to Ollama model names
-     */
-    private String getOllamaModelName(String hfModelName) {
-        // Map common Hugging Face models to Ollama models
-        Map<String, String> modelMapping = Map.of(
-            "microsoft/DialoGPT-medium", "llama2:7b",
-            "microsoft/DialoGPT-large", "llama2:7b", 
-            "microsoft/DialoGPT-xlarge", "llama2:7b",
-            "distilbert-base-uncased", "llama2:7b"
-        );
-        
-        return modelMapping.getOrDefault(hfModelName, "llama2:7b");
-    }
     
     /**
      * Generates an enhanced local response with better context awareness
@@ -242,17 +221,17 @@ public class LocalHuggingFaceService extends BaseLLMProvider {
     }
     
     /**
-     * Gets the model name from configuration or uses a default
+     * Gets the model name from Ollama configuration
      */
     private String getModelName() {
-        String configuredModel = config.getModel("local-huggingface");
-        if (configuredModel != null && !configuredModel.trim().isEmpty()) {
-            return configuredModel;
-        }
-        
-        // Use a recommended model based on performance preference
-        String modelSize = System.getProperty("hf.model.size", "medium");
-        return RECOMMENDED_MODELS.getOrDefault(modelSize, RECOMMENDED_MODELS.get("medium"));
+        return ollamaConfig.getModel();
+    }
+    
+    /**
+     * Gets the configured model name for external access
+     */
+    public String getConfiguredModel() {
+        return ollamaConfig.getModel();
     }
     
     @Override
@@ -262,16 +241,40 @@ public class LocalHuggingFaceService extends BaseLLMProvider {
     
     @Override
     public boolean isAvailable() {
-        // For the simplified implementation, we're always available
-        return true;
+        try {
+            // Check if the configured model is available
+            String modelName = ollamaConfig.getModel();
+            return modelStatus.computeIfAbsent(modelName, this::checkModelAvailability);
+        } catch (Exception e) {
+            log.warn("Error checking model availability: {}", e.getMessage());
+            return false;
+        }
     }
     
     /**
-     * Gets information about available models
+     * Checks if a specific model is available in Ollama
      */
-    public Map<String, String> getAvailableModels() {
-        return Map.copyOf(RECOMMENDED_MODELS);
+    private boolean checkModelAvailability(String modelName) {
+        try {
+            String url = ollamaConfig.getBaseUrl() + "/api/tags";
+            ResponseEntity<Map> response = restTemplate.getForEntity(url, Map.class);
+            
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                Map<String, Object> body = response.getBody();
+                List<Map<String, Object>> models = (List<Map<String, Object>>) body.get("models");
+                
+                if (models != null) {
+                    return models.stream()
+                            .anyMatch(model -> modelName.equals(model.get("name")));
+                }
+            }
+            return false;
+        } catch (Exception e) {
+            log.debug("Model {} not available: {}", modelName, e.getMessage());
+            return false;
+        }
     }
+    
     
     /**
      * Gets memory usage information

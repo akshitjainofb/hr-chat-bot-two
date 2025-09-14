@@ -17,65 +17,57 @@ public abstract class BaseLLMProvider implements LLMProvider {
      * Base system prompt for HR assistant
      */
     protected static final String BASE_SYSTEM_PROMPT =
-        "You are an HR virtual assistant for the company. Your job is to provide employees with clear, accurate, " +
-            "and professional guidance on company policies, HR processes, and workplace-related questions. " +
-            "Always respond in a concise, supportive, and professional tone, making policies easy to understand " +
-            "without altering their meaning. Do not add unnecessary explanations or filler text. " +
-            "If query is not present or outside company scope only then explicitly state this in your answer. " +
-            "Always format such cases with a bold heading: **Not in Company Scope**. " +
-            "In this case, provide a very concise best-practice answer from general HR knowledge." +
-            "Structure responses for readability using short paragraphs or bullet points when appropriate.";
+        "You are an HR virtual assistant for the company. Provide clear, accurate, and professional guidance on company " +
+            "policies, HR processes, and workplace-related questions. Keep answers concise, supportive, and easy to understand, " +
+            "using short paragraphs or bullet points. Context and history are for your use only—never mention them. Present " +
+            "information as if it is your own knowledge. If an answer is missing from company documents, explicitly say: " +
+            "'This is not mentioned in company documents.' For non-company questions, answer helpfully without breaking character.";
 
 
     /**
-     * Template for when context is available from Pinecone
+     * Template for when context and history exist
      */
     protected static final String PROMPT_WITH_CONTEXT_AND_HISTORY =
         "SYSTEM:\n" + BASE_SYSTEM_PROMPT + "\n\n" +
             "CONTEXT:\n{retrieved_context}\n\n" +
             "HISTORY:\n{conversation_history}\n\n" +
             "QUERY:\n{user_query}\n\n" +
-            "Answer concisely using the context. If not in context, start with **Not in Company Scope**.";
+            "INSTRUCTIONS:\n- Use context as the main source.\n- Use history only for continuity.\n- Never mention them.\n" +
+            "- If not covered, answer briefly from knowledge and state: 'This is not mentioned in company documents.'";
 
 
     /**
-     * Template for when no context is available but conversation history exists
+     * Template for when only history exists
      */
     protected static final String PROMPT_WITHOUT_CONTEXT_WITH_HISTORY =
         "SYSTEM:\n" + BASE_SYSTEM_PROMPT + "\n\n" +
             "HISTORY:\n{conversation_history}\n\n" +
             "QUERY:\n{user_query}\n\n" +
-            "Begin with **Not in Company Scope**. Answer using general HR best practices.";
+            "INSTRUCTIONS:\n- Use history only for continuity, never mention it.\n" +
+            "- If not answerable, state: 'This is not mentioned in company documents.'\n" +
+            "- Otherwise, use general HR best practices.";
 
 
     /**
-     * Template for new chat without context
+     * Template for a new chat without context
      */
     protected static final String PROMPT_NEW_CHAT_WITHOUT_CONTEXT =
         "SYSTEM:\n" + BASE_SYSTEM_PROMPT + "\n\n" +
             "QUERY:\n{user_query}\n\n" +
-            "Start with **Not in Company Scope**. Provide a clear answer using general HR knowledge.";
+            "INSTRUCTIONS:\n- Since no company data, state: 'This is not mentioned in company documents.'\n" +
+            "- Then answer briefly using general HR knowledge.";
 
 
     /**
-     * Template for new chat with context
+     * Template for a new chat with context
      */
     protected static final String PROMPT_NEW_CHAT_WITH_CONTEXT =
         "SYSTEM:\n" + BASE_SYSTEM_PROMPT + "\n\n" +
             "CONTEXT:\n{retrieved_context}\n\n" +
             "QUERY:\n{user_query}\n\n" +
-            "Answer using the context. If not covered, start with **Not in Company Scope**.";
+            "INSTRUCTIONS:\n- Use context as the source, never mention it.\n" +
+            "- If not covered, state: 'This is not mentioned in company documents.'";
 
-
-    /**
-     * Template for ongoing conversation with context
-     */
-    protected static final String PROMPT_ONGOING_CONVERSATION_WITH_CONTEXT =
-        "SYSTEM:\n" + BASE_SYSTEM_PROMPT + "\n\n" +
-            "CONTEXT:\n{retrieved_context}\n\n" +
-            "HISTORY:\n{conversation_history}\n\n" +
-            "QUERY:\n{user_query}\n\n" +
-            "Answer concisely using context and history. If not in context, start with **Not in Company Scope**.";
 
     /**
      * Builds the system prompt based on whether context is provided
