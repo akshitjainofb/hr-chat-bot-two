@@ -32,14 +32,10 @@ public abstract class BaseLLMProvider implements LLMProvider {
      */
     protected static final String PROMPT_WITH_CONTEXT_AND_HISTORY =
         "SYSTEM:\n" + BASE_SYSTEM_PROMPT + "\n\n" +
-            "CONTEXT (from Pinecone):\n{retrieved_context}\n\n" +
-            "CONVERSATION HISTORY (if available):\n{conversation_history}\n\n" +
-            "USER QUERY:\n{user_query}\n\n" +
-            "INSTRUCTION:\n" +
-            "Use the provided context and history to give a concise, factual answer. " +
-            "Merge multiple context pieces into one clear response. " +
-            "If the answer is not directly in the context, start with **Not in Company Scope** " +
-            "and then provide a short, best-practice answer from general HR knowledge.";
+            "CONTEXT:\n{retrieved_context}\n\n" +
+            "HISTORY:\n{conversation_history}\n\n" +
+            "QUERY:\n{user_query}\n\n" +
+            "Answer concisely using the context. If not in context, start with **Not in Company Scope**.";
 
 
     /**
@@ -47,13 +43,9 @@ public abstract class BaseLLMProvider implements LLMProvider {
      */
     protected static final String PROMPT_WITHOUT_CONTEXT_WITH_HISTORY =
         "SYSTEM:\n" + BASE_SYSTEM_PROMPT + "\n\n" +
-            "CONVERSATION HISTORY:\n{conversation_history}\n\n" +
-            "USER QUERY:\n{user_query}\n\n" +
-            "INSTRUCTION:\n" +
-            "Since no policy context is available, begin with **Not in Company Scope**. " +
-            "Then answer concisely using general HR best practices, making it clear " +
-            "that this is not based on company-specific policies. " +
-            "Always suggest contacting HR for confirmation.";
+            "HISTORY:\n{conversation_history}\n\n" +
+            "QUERY:\n{user_query}\n\n" +
+            "Begin with **Not in Company Scope**. Answer using general HR best practices.";
 
 
     /**
@@ -61,11 +53,8 @@ public abstract class BaseLLMProvider implements LLMProvider {
      */
     protected static final String PROMPT_NEW_CHAT_WITHOUT_CONTEXT =
         "SYSTEM:\n" + BASE_SYSTEM_PROMPT + "\n\n" +
-            "USER QUERY:\n{user_query}\n\n" +
-            "INSTRUCTION:\n" +
-            "This is a new chat without context. Start with **Not in Company Scope**, " +
-            "then provide a clear, standalone answer using general HR knowledge. " +
-            "Keep the response short and professional, and note that it is not based on company policies.";
+            "QUERY:\n{user_query}\n\n" +
+            "Start with **Not in Company Scope**. Provide a clear answer using general HR knowledge.";
 
 
     /**
@@ -73,12 +62,9 @@ public abstract class BaseLLMProvider implements LLMProvider {
      */
     protected static final String PROMPT_NEW_CHAT_WITH_CONTEXT =
         "SYSTEM:\n" + BASE_SYSTEM_PROMPT + "\n\n" +
-            "CONTEXT (if available):\n{retrieved_context}\n\n" +
-            "USER QUERY:\n{user_query}\n\n" +
-            "INSTRUCTION:\n" +
-            "This is a new chat. Provide a clear, concise standalone answer. " +
-            "Use the context only if relevant. If the answer is not covered in the context, " +
-            "begin with **Not in Company Scope**, then give a short, best-practice answer.";
+            "CONTEXT:\n{retrieved_context}\n\n" +
+            "QUERY:\n{user_query}\n\n" +
+            "Answer using the context. If not covered, start with **Not in Company Scope**.";
 
 
     /**
@@ -87,13 +73,9 @@ public abstract class BaseLLMProvider implements LLMProvider {
     protected static final String PROMPT_ONGOING_CONVERSATION_WITH_CONTEXT =
         "SYSTEM:\n" + BASE_SYSTEM_PROMPT + "\n\n" +
             "CONTEXT:\n{retrieved_context}\n\n" +
-            "CONVERSATION HISTORY:\n{conversation_history}\n\n" +
-            "USER QUERY:\n{user_query}\n\n" +
-            "INSTRUCTION:\n" +
-            "Provide a concise answer that maintains conversation continuity. " +
-            "Use both the context and history to avoid repeating information unnecessarily. " +
-            "If the query is not answered by the context, begin with **Not in Company Scope** " +
-            "and then give a short, best-practice HR answer.";
+            "HISTORY:\n{conversation_history}\n\n" +
+            "QUERY:\n{user_query}\n\n" +
+            "Answer concisely using context and history. If not in context, start with **Not in Company Scope**.";
 
     /**
      * Builds the system prompt based on whether context is provided
@@ -106,22 +88,30 @@ public abstract class BaseLLMProvider implements LLMProvider {
     }
     
     /**
-     * Formats conversation history into a readable string
+     * Formats conversation history into a readable string with token optimization
      * 
      * @param conversationHistory List of conversation messages
-     * @return Formatted conversation string
+     * @return Formatted conversation string (limited to last 6 messages for performance)
      */
     protected String formatConversationHistory(List<ChatMessage> conversationHistory) {
         if (conversationHistory == null || conversationHistory.isEmpty()) {
             return "";
         }
         
+        // Limit to last 6 messages to reduce token usage and improve performance
+        List<ChatMessage> recentMessages = conversationHistory.size() > 6 ? 
+            conversationHistory.subList(conversationHistory.size() - 6, conversationHistory.size()) : 
+            conversationHistory;
+        
         StringBuilder formatted = new StringBuilder();
-        for (ChatMessage msg : conversationHistory) {
-            formatted.append(msg.getRole().name())
-                    .append(": ")
-                    .append(msg.getMessage())
-                    .append("\n");
+        for (ChatMessage msg : recentMessages) {
+            String role = msg.getRole().name().equals("USER") ? "User" : "Assistant";
+            String message = msg.getMessage();
+            // Truncate very long messages to reduce token usage
+            if (message.length() > 200) {
+                message = message.substring(0, 200) + "...";
+            }
+            formatted.append(role).append(": ").append(message).append("\n");
         }
         return formatted.toString();
     }
@@ -138,6 +128,13 @@ public abstract class BaseLLMProvider implements LLMProvider {
         String history = formatConversationHistory(conversationHistory);
         boolean hasContext = context != null && !context.trim().isEmpty();
         boolean hasHistory = history != null && !history.trim().isEmpty();
+        
+        // Truncate context if too long to improve performance
+        String truncatedContext = context;
+        if (hasContext && context.length() > 3000) {
+            truncatedContext = context.substring(0, 3000) + "...\n[Context truncated for performance]";
+            log.debug("Context truncated from {} to {} characters", context.length(), truncatedContext.length());
+        }
         
         // Determine which template to use based on context and history availability
         String template;
@@ -157,9 +154,12 @@ public abstract class BaseLLMProvider implements LLMProvider {
         
         // Replace placeholders in the template
         String prompt = template
-            .replace("{retrieved_context}", hasContext ? context : "")
+            .replace("{retrieved_context}", hasContext ? truncatedContext : "")
             .replace("{conversation_history}", hasHistory ? history : "")
             .replace("{user_query}", userMessage);
+        
+        log.debug("Built prompt with {} characters (context: {}, history: {})", 
+                 prompt.length(), hasContext ? truncatedContext.length() : 0, hasHistory ? history.length() : 0);
         
         return prompt;
     }

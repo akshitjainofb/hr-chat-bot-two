@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import { useDarkMode } from '../contexts/DarkModeContext';
 import api from '../config/axios';
 import toast from 'react-hot-toast';
 
 const Sidebar = ({ selectedRoom, onRoomSelect, onClose, refreshTrigger }) => {
+  const { user } = useAuth();
   const { isDarkMode } = useDarkMode();
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -150,9 +152,11 @@ const Sidebar = ({ selectedRoom, onRoomSelect, onClose, refreshTrigger }) => {
   };
 
   const navigation = [
-    { name: 'Chat', href: '/chat', icon: '💬', current: location.pathname === '/chat' },
-    { name: 'Upload PDFs', href: '/upload', icon: '📄', current: location.pathname === '/upload' },
+    { name: 'Chat', href: '/chat', icon: '💬', current: location.pathname === '/chat' || location.pathname === '/' },
     { name: 'Settings', href: '/settings', icon: '⚙️', current: location.pathname === '/settings' },
+    ...(user && user.role === 'ADMIN' ? [
+      { name: 'Admin', href: '/admin', icon: '👑', current: location.pathname === '/admin' }
+    ] : []),
   ];
 
   return (

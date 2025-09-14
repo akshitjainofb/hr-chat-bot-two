@@ -34,8 +34,10 @@ public class ChatServiceImpl {
 
     @Transactional
     public ChatResponse sendMessage(ChatRequest request, User user) {
+        long totalStartTime = System.currentTimeMillis();
         try {
             // Get chat room
+            long dbStartTime = System.currentTimeMillis();
             ChatRoom chatRoom = chatRoomRepository.findById(request.getChatRoomId())
                     .orElseThrow(() -> new RuntimeException("Chat room not found"));
             
@@ -43,6 +45,8 @@ public class ChatServiceImpl {
             if (!chatRoom.getUser().getId().equals(user.getId())) {
                 throw new RuntimeException("Unauthorized access to chat room");
             }
+            long dbTime = System.currentTimeMillis() - dbStartTime;
+            log.debug("Database operations completed in {}ms", dbTime);
             
             // Use the room's context setting, fallback to request setting if not set
             Boolean useContext = chatRoom.getIncludeContext() != null ? 
@@ -53,10 +57,14 @@ public class ChatServiceImpl {
                      chatRoom.getId(), user.getEmail(), useContext);
             
             // Always retrieve document context from Pinecone
+            long pineconeStartTime = System.currentTimeMillis();
             List<String> documentContext = pineconeService.searchSimilarContent(
                     request.getMessage(), user, 5); // Use a reasonable limit
+            long pineconeTime = System.currentTimeMillis() - pineconeStartTime;
+            log.debug("Pinecone document search completed in {}ms", pineconeTime);
             
             // Build conversation memory using hybrid approach (only if context is enabled)
+            long memoryStartTime = System.currentTimeMillis();
             ConversationMemory conversationMemory = null;
             if (useContext) {
                 conversationMemory = conversationMemoryService
@@ -70,16 +78,22 @@ public class ChatServiceImpl {
                         .totalTokenCount(0)
                         .build();
             }
+            long memoryTime = System.currentTimeMillis() - memoryStartTime;
+            log.debug("Conversation memory building completed in {}ms", memoryTime);
             
             // Generate response using the new memory-aware LLM service
+            long llmStartTime = System.currentTimeMillis();
             ChatResponse response = llmService.generateResponseWithMemory(
                     request.getMessage(),
                     conversationMemory,
                     request.getLlmProvider(),
                     user
             );
+            long llmTime = System.currentTimeMillis() - llmStartTime;
+            log.debug("LLM response generation completed in {}ms", llmTime);
             
             // Save user message
+            long saveStartTime = System.currentTimeMillis();
             ChatMessage userMessage = ChatMessage.builder()
                     .chatRoom(chatRoom)
                     .role(ChatMessage.MessageRole.USER)
@@ -96,9 +110,15 @@ public class ChatServiceImpl {
                     .llmProviderUsed(response.getLlmProviderUsed())
                     .build();
             chatMessageRepository.save(assistantMessage);
+            long saveTime = System.currentTimeMillis() - saveStartTime;
+            log.debug("Message saving completed in {}ms", saveTime);
             
             // Update response with saved message ID
             response.setMessage(assistantMessage.getMessage());
+            
+            long totalTime = System.currentTimeMillis() - totalStartTime;
+            log.info("Total chat processing time: {}ms (DB: {}ms, Pinecone: {}ms, Memory: {}ms, LLM: {}ms, Save: {}ms)", 
+                    totalTime, dbTime, pineconeTime, memoryTime, llmTime, saveTime);
             
             if (useContext) {
                 log.debug("Successfully processed message with full context: {}", 

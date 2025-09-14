@@ -3,6 +3,7 @@ package com.hrchatbot.service.impl;
 import com.hrchatbot.dto.UserDto;
 import com.hrchatbot.entity.User;
 import com.hrchatbot.repository.UserRepository;
+import com.hrchatbot.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -13,7 +14,7 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class UserServiceImpl {
+public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
 
@@ -89,6 +90,7 @@ public class UserServiceImpl {
                 .email(user.getEmail())
                 .name(user.getName())
                 .preferredLlmProvider(user.getPreferredLlmProvider())
+                .role(user.getRole())
                 .createdAt(user.getCreatedAt())
                 .build();
     }

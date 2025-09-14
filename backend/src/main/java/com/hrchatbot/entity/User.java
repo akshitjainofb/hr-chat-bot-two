@@ -41,6 +41,11 @@ public class User {
     @Column(name = "preferred_llm_provider")
     private String preferredLlmProvider = "openai";
     
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role", nullable = false)
+    @Builder.Default
+    private UserRole role = UserRole.USER;
+    
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

@@ -6,18 +6,18 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import jakarta.validation.constraints.NotNull;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserDto {
+public class UpdateUserRoleRequest {
+    @NotNull(message = "User ID is required")
+    private Long userId;
     
-    private Long id;
-    private String email;
-    private String name;
-    private String preferredLlmProvider;
+    @NotNull(message = "Role is required")
     private UserRole role;
-    private LocalDateTime createdAt;
 }
+
+

@@ -9,6 +9,7 @@ import com.hrchatbot.entity.User;
 import com.hrchatbot.repository.PdfDocumentRepository;
 import com.hrchatbot.service.PineconeService;
 import com.hrchatbot.service.PdfProcessingService;
+import com.hrchatbot.service.AdminService;
 import com.hrchatbot.service.impl.UserServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +38,7 @@ public class PdfController {
     private final PdfProcessingService pdfProcessingService;
     private final UserServiceImpl userService;
     private final PineconeService pineconeService;
+    private final AdminService adminService;
 
     @Value("${file.upload-dir}")
     private String uploadDir;
@@ -47,6 +49,14 @@ public class PdfController {
         try {
             User user = userService.findByEmail(userEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
+            
+            // Check if user is admin
+            if (!adminService.isAdmin(user)) {
+                return ResponseEntity.badRequest().body(PdfUploadResponse.builder()
+                    .success(false)
+                    .error("Unauthorized: Admin access required")
+                    .build());
+            }
             
             if (file.isEmpty()) {
                 return ResponseEntity.badRequest().body(PdfUploadResponse.builder()
@@ -127,6 +137,12 @@ public class PdfController {
         try {
             User user = userService.findByEmail(userEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
+            
+            // Check if user is admin
+            if (!adminService.isAdmin(user)) {
+                return ResponseEntity.badRequest().build();
+            }
+            
             List<PdfDocument> documents = pdfDocumentRepository.findByUserOrderByCreatedAtDesc(user);
             List<PdfDocumentDto> documentDtos = documents.stream()
                     .map(this::convertToDto)
@@ -144,12 +160,14 @@ public class PdfController {
         try {
             User user = userService.findByEmail(userEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
+            
+            // Check if user is admin
+            if (!adminService.isAdmin(user)) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("Unauthorized: Admin access required"));
+            }
+            
             PdfDocument document = pdfDocumentRepository.findById(documentId)
                     .orElseThrow(() -> new RuntimeException("Document not found"));
-            
-            if (!document.getUser().getId().equals(user.getId())) {
-                return ResponseEntity.badRequest().body(ApiResponse.error("Unauthorized access"));
-            }
             
             // Delete from Pinecone vector database first
             try {

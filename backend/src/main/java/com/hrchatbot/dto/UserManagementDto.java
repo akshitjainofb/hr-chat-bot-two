@@ -12,12 +12,14 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserDto {
-    
+public class UserManagementDto {
     private Long id;
     private String email;
     private String name;
-    private String preferredLlmProvider;
     private UserRole role;
     private LocalDateTime createdAt;
+    private int chatRoomCount;
+    private int pdfDocumentCount;
 }
+
+

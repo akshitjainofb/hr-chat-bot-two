@@ -6,8 +6,8 @@ import { DarkModeProvider } from './contexts/DarkModeContext';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import ChatPage from './pages/ChatPage';
-import PdfUploadPage from './pages/PdfUploadPage';
 import SettingsPage from './pages/SettingsPage';
+import AdminPage from './pages/AdminPage';
 import LoadingSpinner from './components/LoadingSpinner';
 
 function AppContent() {
@@ -29,11 +29,12 @@ function AppContent() {
             </>
           ) : (
             <>
-              <Route path="/" element={<ChatPage />} />
+              <Route path="/" element={<Navigate to="/chat" replace />} />
               <Route path="/chat" element={<ChatPage />} />
-              <Route path="/upload" element={<PdfUploadPage />} />
+              <Route path="/upload" element={<Navigate to="/admin" replace />} />
               <Route path="/settings" element={<SettingsPage />} />
-              <Route path="*" element={<Navigate to="/" replace />} />
+              <Route path="/admin" element={<AdminPage />} />
+              <Route path="*" element={<Navigate to="/chat" replace />} />
             </>
           )}
         </Routes>

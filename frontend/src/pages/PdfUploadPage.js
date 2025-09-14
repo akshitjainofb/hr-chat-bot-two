@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import { useDarkMode } from '../contexts/DarkModeContext';
 import { useNavigate } from 'react-router-dom';
 import api from '../config/axios';
@@ -6,6 +7,7 @@ import toast from 'react-hot-toast';
 import DarkModeToggle from '../components/DarkModeToggle';
 
 const PdfUploadPage = () => {
+  const { user } = useAuth();
   const { isDarkMode } = useDarkMode();
   const navigate = useNavigate();
   const [documents, setDocuments] = useState([]);
@@ -15,8 +17,15 @@ const PdfUploadPage = () => {
   const fileInputRef = useRef(null);
 
   useEffect(() => {
-    fetchDocuments();
-  }, []);
+    if (user && user.role !== 'ADMIN') {
+      toast.error('Admin access required for PDF upload');
+      navigate('/admin');
+      return;
+    }
+    if (user && user.role === 'ADMIN') {
+      fetchDocuments();
+    }
+  }, [user, navigate]);
 
   const fetchDocuments = async () => {
     try {
@@ -147,6 +156,24 @@ const PdfUploadPage = () => {
       minute: '2-digit'
     });
   };
+
+  // Show loading if user is not admin
+  if (!user || user.role !== 'ADMIN') {
+    return (
+      <div className={`min-h-screen flex items-center justify-center ${
+        isDarkMode 
+          ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-700' 
+          : 'bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100'
+      }`}>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+            Redirecting to admin page...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`min-h-screen py-8 ${

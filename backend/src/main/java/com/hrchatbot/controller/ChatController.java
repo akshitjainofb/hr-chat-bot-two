@@ -1,9 +1,11 @@
 package com.hrchatbot.controller;
 
+import com.hrchatbot.dto.ApiResponse;
 import com.hrchatbot.dto.ChatRequest;
 import com.hrchatbot.dto.ChatResponse;
 import com.hrchatbot.dto.ChatRoomDto;
 import com.hrchatbot.entity.User;
+import com.hrchatbot.service.PineconeService;
 import com.hrchatbot.service.impl.ChatServiceImpl;
 import com.hrchatbot.service.impl.UserServiceImpl;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +25,7 @@ public class ChatController {
 
     private final ChatServiceImpl chatService;
     private final UserServiceImpl userService;
+    private final PineconeService pineconeService;
 
     @PostMapping("/send")
     public ResponseEntity<ChatResponse> sendMessage(@Valid @RequestBody ChatRequest request) {
@@ -198,6 +201,28 @@ public class ChatController {
         } catch (Exception e) {
             log.error("Error updating context setting: {}", e.getMessage());
             return ResponseEntity.badRequest().build();
+        }
+    }
+    
+    @GetMapping("/test-pinecone")
+    public ResponseEntity<ApiResponse<String>> testPineconePerformance(
+            @RequestParam String userEmail,
+            @RequestParam(defaultValue = "test query") String query) {
+        try {
+            User user = userService.findByEmail(userEmail)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            
+            long startTime = System.currentTimeMillis();
+            List<String> results = pineconeService.searchSimilarContent(query, user, 5);
+            long duration = System.currentTimeMillis() - startTime;
+            
+            String response = String.format("Pinecone search completed in %dms, found %d results", duration, results.size());
+            return ResponseEntity.ok(ApiResponse.success(response, response));
+            
+        } catch (Exception e) {
+            log.error("Error testing Pinecone performance: {}", e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("Failed to test Pinecone: " + e.getMessage()));
         }
     }
 }

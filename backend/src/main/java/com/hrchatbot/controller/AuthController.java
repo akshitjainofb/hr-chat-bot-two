@@ -2,6 +2,7 @@ package com.hrchatbot.controller;
 
 import com.hrchatbot.dto.AuthResponse;
 import com.hrchatbot.dto.UserDto;
+import com.hrchatbot.entity.User;
 import com.hrchatbot.service.impl.UserServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -48,8 +49,20 @@ public class AuthController {
             // Check if user exists
             var existingUser = userService.findByEmail(email);
             if (existingUser.isPresent()) {
-                // Verify password
-                if (passwordEncoder.matches(password, existingUser.get().getPassword())) {
+                User user = existingUser.get();
+                String storedPassword = user.getPassword();
+                
+                // Check if password is hashed (starts with $2a$) or plain text
+                boolean passwordMatches = false;
+                if (storedPassword != null && storedPassword.startsWith("$2a$")) {
+                    // Password is hashed, use BCrypt
+                    passwordMatches = passwordEncoder.matches(password, storedPassword);
+                } else {
+                    // Password is plain text, compare directly
+                    passwordMatches = password.equals(storedPassword);
+                }
+                
+                if (passwordMatches) {
                     UserDto userDto = userService.getUserByEmail(email);
                     return ResponseEntity.ok(AuthResponse.builder()
                         .success(true)

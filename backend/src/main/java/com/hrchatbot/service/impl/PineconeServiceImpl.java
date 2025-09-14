@@ -31,10 +31,39 @@ public class PineconeServiceImpl implements PineconeService {
 
     @Value("${pinecone.api-key}")
     private String apiKey;
+    
+    // Cache the index connection to avoid recreating it for every request
+    private volatile Index cachedIndex;
+    private final Object indexLock = new Object();
 
     private Index index() {
-        Pinecone pc = new Pinecone.Builder(apiKey).build();
-        return pc.getIndexConnection(indexName);
+        // Double-checked locking pattern for thread-safe lazy initialization
+        if (cachedIndex == null) {
+            synchronized (indexLock) {
+                if (cachedIndex == null) {
+                    log.debug("Creating new Pinecone index connection for: {}", indexName);
+                    Pinecone pc = new Pinecone.Builder(apiKey).build();
+                    cachedIndex = pc.getIndexConnection(indexName);
+                    log.debug("Pinecone index connection created successfully");
+                }
+            }
+        }
+        return cachedIndex;
+    }
+    
+    /**
+     * Pre-warm the Pinecone connection to improve first-request performance
+     */
+    @jakarta.annotation.PostConstruct
+    public void preWarmConnection() {
+        try {
+            log.info("Pre-warming Pinecone connection...");
+            Index index = index();
+            // Perform a simple operation to establish the connection
+            log.info("Pinecone connection pre-warmed successfully");
+        } catch (Exception e) {
+            log.warn("Failed to pre-warm Pinecone connection: {}", e.getMessage());
+        }
     }
 
     @Override
@@ -75,12 +104,14 @@ public class PineconeServiceImpl implements PineconeService {
 
     @Override
     public List<String> searchSimilarContent(String query, User user, int topK) {
+        long startTime = System.currentTimeMillis();
         try {
             Index index = index();
             
             // Define fields to return
             List<String> fields = List.of("text", "file_name", "document_id");
             
+            log.debug("Searching Pinecone for query: '{}' with topK: {}", query, topK);
             SearchRecordsResponse response = index.searchRecordsByText(
                 query,
                 "hr-policies",
@@ -106,13 +137,17 @@ public class PineconeServiceImpl implements PineconeService {
                 });
             }
             
+            long duration = System.currentTimeMillis() - startTime;
+            log.debug("Pinecone search completed in {}ms, found {} results", duration, results.size());
             return results;
             
         } catch (ApiException e) {
-            log.error("Error searching similar content: {}", e.getMessage());
+            long duration = System.currentTimeMillis() - startTime;
+            log.error("Error searching similar content after {}ms: {}", duration, e.getMessage());
             return new ArrayList<>();
         } catch (Exception e) {
-            log.error("Unexpected error searching similar content: {}", e.getMessage());
+            long duration = System.currentTimeMillis() - startTime;
+            log.error("Unexpected error searching similar content after {}ms: {}", duration, e.getMessage());
             return new ArrayList<>();
         }
     }
@@ -294,6 +329,7 @@ public class PineconeServiceImpl implements PineconeService {
     
     @Override
     public List<String> searchConversationMemory(String query, User user, int topK) {
+        long startTime = System.currentTimeMillis();
         try {
             Index index = index();
             
@@ -305,6 +341,7 @@ public class PineconeServiceImpl implements PineconeService {
             filter.put("user_id", user.getId().toString());
             filter.put("type", "conversation");
             
+            log.debug("Searching conversation memory for query: '{}' with topK: {}", query, topK);
             SearchRecordsResponse response = index.searchRecordsByText(
                 query,
                 "conversation-memory",
@@ -331,14 +368,18 @@ public class PineconeServiceImpl implements PineconeService {
                 });
             }
             
-            log.debug("Retrieved {} conversation memory results for query: {}", results.size(), query);
+            long duration = System.currentTimeMillis() - startTime;
+            log.debug("Conversation memory search completed in {}ms, found {} results for query: {}", 
+                     duration, results.size(), query);
             return results;
             
         } catch (ApiException e) {
-            log.error("Error searching conversation memory: {}", e.getMessage());
+            long duration = System.currentTimeMillis() - startTime;
+            log.error("Error searching conversation memory after {}ms: {}", duration, e.getMessage());
             return new ArrayList<>();
         } catch (Exception e) {
-            log.error("Unexpected error searching conversation memory: {}", e.getMessage());
+            long duration = System.currentTimeMillis() - startTime;
+            log.error("Unexpected error searching conversation memory after {}ms: {}", duration, e.getMessage());
             return new ArrayList<>();
         }
     }
