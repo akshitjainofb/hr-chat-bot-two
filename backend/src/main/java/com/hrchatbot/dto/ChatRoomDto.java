@@ -19,4 +19,5 @@ public class ChatRoomDto {
     private LocalDateTime createdAt;
     private List<ChatMessageDto> messages;
     private int messageCount;
+    private Boolean includeContext;
 }

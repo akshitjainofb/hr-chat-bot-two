@@ -40,4 +40,8 @@ public class ChatRoom {
     @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @OrderBy("createdAt ASC")
     private List<ChatMessage> messages;
+    
+    @Column(name = "include_context", nullable = false)
+    @Builder.Default
+    private Boolean includeContext = true;
 }

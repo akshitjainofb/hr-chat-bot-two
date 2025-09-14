@@ -59,12 +59,19 @@ public class LlmServiceImpl implements LlmService {
     public ChatResponse generateResponseWithMemory(String userMessage, ConversationMemory conversationMemory, 
                                                   String provider, User user) {
         // Convert conversation memory to the format expected by providers
-        List<ChatMessage> conversationHistory = conversationMemory.getShortTermMemory();
-        String context = conversationMemory.getCombinedContext();
+        List<ChatMessage> conversationHistory = null;
+        String context = null;
         
-        log.debug("Generating response with memory: {} tokens, {} short-term messages", 
-                 conversationMemory.getTotalTokenCount(), 
-                 conversationHistory != null ? conversationHistory.size() : 0);
+        if (conversationMemory != null) {
+            conversationHistory = conversationMemory.getShortTermMemory();
+            context = conversationMemory.getCombinedContext();
+            
+            log.debug("Generating response with memory: {} tokens, {} short-term messages", 
+                     conversationMemory.getTotalTokenCount(), 
+                     conversationHistory != null ? conversationHistory.size() : 0);
+        } else {
+            log.debug("Generating response without conversation context");
+        }
         
         return generateResponse(userMessage, conversationHistory, context, provider, user);
     }

@@ -24,4 +24,6 @@ public class ChatRequest {
     
     @NotBlank(message = "User email is required")
     private String userEmail;
+    
+    private Boolean includeContext;
 }

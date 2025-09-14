@@ -175,4 +175,29 @@ public class ChatController {
             return ResponseEntity.badRequest().build();
         }
     }
+
+    @PutMapping("/rooms/{roomId}/context")
+    public ResponseEntity<ChatRoomDto> updateContextSetting(@PathVariable Long roomId, 
+                                                           @RequestBody Map<String, Object> request) {
+        try {
+            String userEmail = (String) request.get("userEmail");
+            if (userEmail == null || userEmail.trim().isEmpty()) {
+                return ResponseEntity.badRequest().build();
+            }
+            
+            User user = userService.findByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+            
+            Boolean includeContext = (Boolean) request.get("includeContext");
+            if (includeContext == null) {
+                return ResponseEntity.badRequest().build();
+            }
+            
+            ChatRoomDto room = chatService.updateContextSetting(roomId, includeContext, user);
+            return ResponseEntity.ok(room);
+        } catch (Exception e) {
+            log.error("Error updating context setting: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
+        }
+    }
 }

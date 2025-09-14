@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import { useDarkMode } from '../contexts/DarkModeContext';
 import api from '../config/axios';
 import axios from 'axios';
@@ -7,6 +8,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
 const ChatInterface = ({ room, onRoomUpdate }) => {
+  const { user } = useAuth();
   const { isDarkMode } = useDarkMode();
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
@@ -15,6 +17,7 @@ const ChatInterface = ({ room, onRoomUpdate }) => {
   const [showChatMenu, setShowChatMenu] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const [currentRequest, setCurrentRequest] = useState(null);
+  const [includeContext, setIncludeContext] = useState(room?.includeContext ?? true);
   const messagesEndRef = useRef(null);
   const menuRef = useRef(null);
 
@@ -41,6 +44,7 @@ const ChatInterface = ({ room, onRoomUpdate }) => {
   useEffect(() => {
     if (room) {
       fetchMessages();
+      setIncludeContext(room.includeContext ?? true);
     }
   }, [room]);
 
@@ -144,7 +148,8 @@ const ChatInterface = ({ room, onRoomUpdate }) => {
       const response = await api.post('/api/chat/send', {
         chatRoomId: room.id,
         message: userMessage.message,
-        userEmail: user.email
+        userEmail: user.email,
+        includeContext: includeContext
       }, {
         cancelToken: cancelToken.token
       });
@@ -226,6 +231,57 @@ const ChatInterface = ({ room, onRoomUpdate }) => {
     });
   };
 
+  const formatDate = (timestamp) => {
+    const messageDate = new Date(timestamp);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    // Reset time to compare only dates
+    const messageDateOnly = new Date(messageDate.getFullYear(), messageDate.getMonth(), messageDate.getDate());
+    const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const yesterdayOnly = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate());
+    
+    if (messageDateOnly.getTime() === todayOnly.getTime()) {
+      return 'Today';
+    } else if (messageDateOnly.getTime() === yesterdayOnly.getTime()) {
+      return 'Yesterday';
+    } else {
+      return messageDate.toLocaleDateString([], { 
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    }
+  };
+
+  const groupMessagesByDate = (messages) => {
+    const grouped = [];
+    let currentDate = null;
+    
+    messages.forEach((message, index) => {
+      const messageDate = formatDate(message.createdAt);
+      
+      if (messageDate !== currentDate) {
+        grouped.push({
+          type: 'date-separator',
+          date: messageDate,
+          id: `date-${message.createdAt}`
+        });
+        currentDate = messageDate;
+      }
+      
+      grouped.push({
+        type: 'message',
+        data: message,
+        id: message.id
+      });
+    });
+    
+    return grouped;
+  };
+
   const exportChat = () => {
     if (messages.length === 0) {
       toast.error('No messages to export');
@@ -281,6 +337,20 @@ const ChatInterface = ({ room, onRoomUpdate }) => {
       console.error('Error clearing chat:', error);
       toast.error('Failed to clear chat');
     }
+  };
+
+  const DateSeparator = ({ date }) => {
+    return (
+      <div className="flex items-center justify-center my-6">
+        <div className={`px-4 py-2 rounded-full text-sm font-medium ${
+          isDarkMode
+            ? 'bg-gray-700 text-gray-300 border border-gray-600'
+            : 'bg-gray-100 text-gray-600 border border-gray-200'
+        }`}>
+          {date}
+        </div>
+      </div>
+    );
   };
 
   const MessageBubble = ({ message, index }) => {
@@ -406,9 +476,13 @@ const ChatInterface = ({ room, onRoomUpdate }) => {
             </div>
           )}
           
-          {messages.map((message, index) => (
-            <MessageBubble key={message.id} message={message} index={index} />
-          ))}
+          {groupMessagesByDate(messages).map((item) => {
+            if (item.type === 'date-separator') {
+              return <DateSeparator key={item.id} date={item.date} />;
+            } else {
+              return <MessageBubble key={item.id} message={item.data} index={0} />;
+            }
+          })}
           
           {isLoading && <LoadingMessage />}
           <div ref={messagesEndRef} />
@@ -443,6 +517,52 @@ const ChatInterface = ({ room, onRoomUpdate }) => {
               </div>
             </div>
             
+            {/* Context Toggle Button */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={async () => {
+                  const newContextSetting = !includeContext;
+                  setIncludeContext(newContextSetting);
+                  
+                  // Update the context setting on the backend
+                  try {
+                    await api.put(`/api/chat/rooms/${room.id}/context`, {
+                      userEmail: user.email,
+                      includeContext: newContextSetting
+                    });
+                    
+                    // Update the room in the parent component
+                    if (onRoomUpdate) {
+                      onRoomUpdate(prev => ({
+                        ...prev,
+                        includeContext: newContextSetting
+                      }));
+                    }
+                  } catch (error) {
+                    console.error('Error updating context setting:', error);
+                    // Revert the state if the update failed
+                    setIncludeContext(includeContext);
+                    toast.error('Failed to update context setting');
+                  }
+                }}
+                className={`h-12 w-12 rounded-2xl shadow-lg flex items-center justify-center transition-colors duration-200 ${
+                  includeContext
+                    ? isDarkMode
+                      ? 'bg-blue-600 border border-blue-500 text-white hover:bg-blue-700'
+                      : 'bg-blue-500 border border-blue-400 text-white hover:bg-blue-600'
+                    : isDarkMode
+                      ? 'bg-gray-700 border border-gray-600 text-gray-300 hover:bg-gray-600'
+                      : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                }`}
+                title={includeContext ? 'Context enabled - Click to disable' : 'Context disabled - Click to enable'}
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </button>
+            </div>
+
             {/* Chat Menu Button */}
             {room && messages.length > 0 && (
               <div className="relative" ref={menuRef}>

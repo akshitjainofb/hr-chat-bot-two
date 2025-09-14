@@ -44,12 +44,32 @@ public class ChatServiceImpl {
                 throw new RuntimeException("Unauthorized access to chat room");
             }
             
-            log.debug("Processing message for chat room {} and user {}", 
-                     chatRoom.getId(), user.getEmail());
+            // Use the room's context setting, fallback to request setting if not set
+            Boolean useContext = chatRoom.getIncludeContext() != null ? 
+                chatRoom.getIncludeContext() : 
+                (request.getIncludeContext() != null ? request.getIncludeContext() : true);
             
-            // Build conversation memory using hybrid approach
-            ConversationMemory conversationMemory = conversationMemoryService
-                    .buildConversationMemory(chatRoom, request.getMessage(), user);
+            log.debug("Processing message for chat room {} and user {} with context: {} (document context always included)", 
+                     chatRoom.getId(), user.getEmail(), useContext);
+            
+            // Always retrieve document context from Pinecone
+            List<String> documentContext = pineconeService.searchSimilarContent(
+                    request.getMessage(), user, 5); // Use a reasonable limit
+            
+            // Build conversation memory using hybrid approach (only if context is enabled)
+            ConversationMemory conversationMemory = null;
+            if (useContext) {
+                conversationMemory = conversationMemoryService
+                        .buildConversationMemory(chatRoom, request.getMessage(), user);
+            } else {
+                // Create a minimal conversation memory with only document context
+                conversationMemory = ConversationMemory.builder()
+                        .shortTermMemory(List.of()) // No conversation history
+                        .longTermMemory(List.of()) // No long-term memory
+                        .documentContext(documentContext) // Only document context
+                        .totalTokenCount(0)
+                        .build();
+            }
             
             // Generate response using the new memory-aware LLM service
             ChatResponse response = llmService.generateResponseWithMemory(
@@ -72,7 +92,7 @@ public class ChatServiceImpl {
                     .chatRoom(chatRoom)
                     .role(ChatMessage.MessageRole.ASSISTANT)
                     .message(response.getMessage())
-                    .contextUsed(conversationMemory.getCombinedContext())
+                    .contextUsed(conversationMemory != null ? conversationMemory.getCombinedContext() : "Document context only")
                     .llmProviderUsed(response.getLlmProviderUsed())
                     .build();
             chatMessageRepository.save(assistantMessage);
@@ -80,8 +100,12 @@ public class ChatServiceImpl {
             // Update response with saved message ID
             response.setMessage(assistantMessage.getMessage());
             
-            log.debug("Successfully processed message with memory: {}", 
-                     conversationMemory.getMemorySummary());
+            if (useContext) {
+                log.debug("Successfully processed message with full context: {}", 
+                         conversationMemory.getMemorySummary());
+            } else {
+                log.debug("Successfully processed message with document context only (no conversation history)");
+            }
             
             return response;
             
@@ -163,6 +187,22 @@ public class ChatServiceImpl {
     }
 
     @Transactional
+    public ChatRoomDto updateContextSetting(Long roomId, Boolean includeContext, User user) {
+        ChatRoom chatRoom = chatRoomRepository.findById(roomId)
+                .orElseThrow(() -> new RuntimeException("Chat room not found"));
+        
+        if (!chatRoom.getUser().getId().equals(user.getId())) {
+            throw new RuntimeException("Unauthorized access to chat room");
+        }
+        
+        chatRoom.setIncludeContext(includeContext);
+        chatRoom = chatRoomRepository.save(chatRoom);
+        
+        log.debug("Updated context setting for room {} to {}", roomId, includeContext);
+        return convertToDto(chatRoom);
+    }
+
+    @Transactional
     public void clearChatMessages(Long roomId, User user) {
         ChatRoom chatRoom = chatRoomRepository.findById(roomId)
                 .orElseThrow(() -> new RuntimeException("Chat room not found"));
@@ -195,6 +235,7 @@ public class ChatServiceImpl {
                 .createdAt(chatRoom.getCreatedAt())
                 .messages(messages)
                 .messageCount(messages.size())
+                .includeContext(chatRoom.getIncludeContext())
                 .build();
     }
 }
