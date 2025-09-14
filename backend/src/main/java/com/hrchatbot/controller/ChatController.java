@@ -43,7 +43,7 @@ public class ChatController {
             }
             
             User user = userService.findByEmail(userEmail)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
             
             log.debug("Processing chat message for user: {} in room: {}", userEmail, request.getChatRoomId());
             ChatResponse response = chatService.sendMessage(request, user);
@@ -81,7 +81,7 @@ public class ChatController {
     public ResponseEntity<List<ChatRoomDto>> getUserChatRooms(@RequestParam String userEmail) {
         try {
             User user = userService.findByEmail(userEmail)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
             List<ChatRoomDto> rooms = chatService.getUserChatRooms(user);
             return ResponseEntity.ok(rooms);
         } catch (Exception e) {
@@ -120,7 +120,7 @@ public class ChatController {
     public ResponseEntity<ChatRoomDto> getChatRoom(@PathVariable Long roomId, @RequestParam String userEmail) {
         try {
             User user = userService.findByEmail(userEmail)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
             ChatRoomDto room = chatService.getChatRoom(roomId, user);
             return ResponseEntity.ok(room);
         } catch (Exception e) {
@@ -139,7 +139,7 @@ public class ChatController {
             }
             
             User user = userService.findByEmail(userEmail)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
             
             String name = request.get("name");
             if (name == null || name.trim().isEmpty()) {
@@ -158,7 +158,7 @@ public class ChatController {
     public ResponseEntity<Void> deleteChatRoom(@PathVariable Long roomId, @RequestParam String userEmail) {
         try {
             User user = userService.findByEmail(userEmail)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
             chatService.deleteChatRoom(roomId, user);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
@@ -171,7 +171,7 @@ public class ChatController {
     public ResponseEntity<Void> clearChatMessages(@PathVariable Long roomId, @RequestParam String userEmail) {
         try {
             User user = userService.findByEmail(userEmail)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
             chatService.clearChatMessages(roomId, user);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
@@ -190,7 +190,7 @@ public class ChatController {
             }
             
             User user = userService.findByEmail(userEmail)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
             
             Boolean includeContext = (Boolean) request.get("includeContext");
             if (includeContext == null) {

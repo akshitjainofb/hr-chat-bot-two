@@ -7,7 +7,7 @@ import api from '../config/axios';
 import toast from 'react-hot-toast';
 
 const SignupPage = () => {
-  const { user, setUser } = useAuth();
+  const { setUser } = useAuth();
   const { isDarkMode } = useDarkMode();
   const [formData, setFormData] = useState({
     name: '',

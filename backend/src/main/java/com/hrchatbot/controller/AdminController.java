@@ -4,6 +4,7 @@ import com.hrchatbot.dto.ApiResponse;
 import com.hrchatbot.dto.UpdateUserRoleRequest;
 import com.hrchatbot.dto.UserManagementDto;
 import com.hrchatbot.entity.User;
+import com.hrchatbot.exception.UserNotFoundException;
 import com.hrchatbot.service.AdminService;
 import com.hrchatbot.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +30,7 @@ public class AdminController {
     public ResponseEntity<ApiResponse<List<UserManagementDto>>> getAllUsers(@RequestParam String userEmail) {
         try {
             User adminUser = userService.findByEmail(userEmail)
-                    .orElseThrow(() -> new RuntimeException("User not found"));
+                    .orElseThrow(() -> new UserNotFoundException("User not found"));
             
             List<UserManagementDto> users = adminService.getAllUsers(adminUser);
             
@@ -51,7 +52,7 @@ public class AdminController {
             @RequestParam String userEmail) {
         try {
             User adminUser = userService.findByEmail(userEmail)
-                    .orElseThrow(() -> new RuntimeException("User not found"));
+                    .orElseThrow(() -> new UserNotFoundException("User not found"));
             
             UserManagementDto updatedUser = adminService.updateUserRole(request, adminUser);
             
