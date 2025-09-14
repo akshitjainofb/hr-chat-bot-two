@@ -25,7 +25,9 @@ const SettingsPage = () => {
   const fetchLlmProviders = async () => {
     try {
       const response = await api.get('/api/settings/llm-providers');
-      setLlmProviders(response.data.providers);
+      // Filter out Claude from the providers list
+      const filteredProviders = response.data.providers.filter(provider => provider !== 'claude');
+      setLlmProviders(filteredProviders);
       setSelectedProvider(user?.preferredLlmProvider || response.data.defaultProvider);
     } catch (error) {
       console.error('Error fetching LLM providers:', error);
@@ -120,6 +122,12 @@ const SettingsPage = () => {
       description: 'Google\'s multimodal AI model with strong performance',
       icon: '🧠',
       color: 'bg-blue-100 text-blue-800'
+    },
+    perplexity: {
+      name: 'Perplexity AI',
+      description: 'Fast and efficient AI with real-time knowledge access',
+      icon: '🔍',
+      color: 'bg-indigo-100 text-indigo-800'
     },
     huggingface: {
       name: 'Hugging Face (API)',

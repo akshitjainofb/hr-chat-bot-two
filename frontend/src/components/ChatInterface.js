@@ -341,8 +341,8 @@ const ChatInterface = ({ room, onRoomUpdate }) => {
 
   const DateSeparator = ({ date }) => {
     return (
-      <div className="flex items-center justify-center my-6">
-        <div className={`px-4 py-2 rounded-full text-sm font-medium ${
+      <div className="flex items-center justify-center my-2 mb-4">
+        <div className={`px-3 py-1 rounded-full text-xs font-medium ${
           isDarkMode
             ? 'bg-gray-700 text-gray-300 border border-gray-600'
             : 'bg-gray-100 text-gray-600 border border-gray-200'
@@ -357,7 +357,7 @@ const ChatInterface = ({ room, onRoomUpdate }) => {
     const isUser = message.role === 'USER';
     
     return (
-      <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}>
+      <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-2`}>
         <div className={`flex max-w-md lg:max-w-lg xl:max-w-xl items-end ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
           {/* Avatar */}
           <div className={`w-10 h-10 flex-shrink-0 rounded-full flex items-center justify-center text-sm font-bold ${isUser ? 'ml-3' : 'mr-3'} ${
@@ -458,10 +458,10 @@ const ChatInterface = ({ room, onRoomUpdate }) => {
 
 
       {/* Messages area */}
-      <div className="flex-1 overflow-y-auto px-8 py-6 relative z-10">
+      <div className="flex-1 overflow-y-auto px-6 py-4 relative z-10">
         <div className="max-w-4xl mx-auto">
           {messages.length === 0 && !isLoading && (
-            <div className="text-center py-16">
+            <div className="text-center py-12">
               <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
                 <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -490,7 +490,7 @@ const ChatInterface = ({ room, onRoomUpdate }) => {
       </div>
 
       {/* Input area */}
-      <div className={`px-8 py-6 ${
+      <div className={`px-6 py-4 ${
         isDarkMode 
           ? 'bg-gray-800/50 border-t border-gray-700/50' 
           : 'bg-white/30 border-t border-gray-200/50'

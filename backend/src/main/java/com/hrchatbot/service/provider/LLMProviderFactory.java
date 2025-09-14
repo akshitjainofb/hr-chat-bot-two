@@ -28,6 +28,8 @@ public class LLMProviderFactory {
      */
     private void initializeProviderMap() {
         if (providerMap == null) {
+            log.info("Found {} LLM provider implementations: {}", providers.size(), 
+                    providers.stream().map(LLMProvider::getProviderName).collect(Collectors.toList()));
             providerMap = providers.stream()
                     .collect(Collectors.toMap(
                             LLMProvider::getProviderName,

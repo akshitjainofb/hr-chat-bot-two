@@ -52,17 +52,25 @@ public class LocalHuggingFaceService extends BaseLLMProvider {
 
     @Override
     public ChatResponse generateResponse(String userMessage, List<ChatMessage> conversationHistory, String context) {
+        long startTime = System.currentTimeMillis();
         try {
+            log.debug("Starting Local Hugging Face/Ollama API call for user message: {}", userMessage.substring(0, Math.min(50, userMessage.length())));
+            
             String modelName = getModelName();
             String prompt = buildCompletePrompt(userMessage, conversationHistory, context);
+            log.debug("Built prompt with {} characters", prompt.length());
             
             log.debug("Generating response with local model: {}", modelName);
             String response = generateLocalResponse(prompt, modelName);
             
+            long duration = System.currentTimeMillis() - startTime;
+            log.info("Local Hugging Face/Ollama API call completed in {}ms", duration);
+            
             return createResponse(response, context);
                     
         } catch (Exception e) {
-            log.error("Error generating response with local Hugging Face model: {}", e.getMessage());
+            long duration = System.currentTimeMillis() - startTime;
+            log.error("Local Hugging Face/Ollama API call failed after {}ms: {}", duration, e.getMessage());
             return handleException(e, context);
         }
     }
@@ -92,34 +100,50 @@ public class LocalHuggingFaceService extends BaseLLMProvider {
      * Calls Ollama API for local model inference
      */
     private String callOllamaAPI(String prompt, String modelName) {
+        long apiStartTime = System.currentTimeMillis();
         try {
             String url = ollamaConfig.getBaseUrl() + "/api/generate";
             
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set("User-Agent", "HR-Chatbot/1.0");
             
             Map<String, Object> requestBody = new HashMap<>();
             requestBody.put("model", getOllamaModelName(modelName));
             requestBody.put("prompt", prompt);
             requestBody.put("stream", false);
-            requestBody.put("options", Map.of(
-                "temperature", ollamaConfig.getTemperature(),
-                "top_p", 0.9,
-                "num_predict", ollamaConfig.getMaxTokens()
-            ));
+            
+            // Optimized options for better performance
+            Map<String, Object> options = new HashMap<>();
+            options.put("temperature", Math.min(ollamaConfig.getTemperature(), 0.7)); // Cap temperature
+            options.put("top_p", 0.8); // Reduced from 0.9 for better performance
+            options.put("top_k", 40); // Add top_k for better performance
+            options.put("num_predict", Math.min(ollamaConfig.getMaxTokens(), 500)); // Cap max tokens
+            options.put("repeat_penalty", 1.1); // Prevent repetition
+            options.put("stop", new String[]{"</s>", "USER:", "Assistant:"}); // Stop tokens
+            
+            requestBody.put("options", options);
             
             HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
             
             ResponseEntity<Map> response = restTemplate.postForEntity(url, request, Map.class);
             
+            long apiDuration = System.currentTimeMillis() - apiStartTime;
+            log.debug("Ollama API HTTP call completed in {}ms", apiDuration);
+            
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 Map<String, Object> responseBody = response.getBody();
-                return (String) responseBody.get("response");
+                String responseText = (String) responseBody.get("response");
+                if (responseText != null && !responseText.trim().isEmpty()) {
+                    log.debug("Ollama API returned response with {} characters", responseText.length());
+                    return responseText;
+                }
             }
             
             return null;
         } catch (Exception e) {
-            log.error("Error calling Ollama API: {}", e.getMessage());
+            long apiDuration = System.currentTimeMillis() - apiStartTime;
+            log.error("Error calling Ollama API after {}ms: {}", apiDuration, e.getMessage());
             return null;
         }
     }

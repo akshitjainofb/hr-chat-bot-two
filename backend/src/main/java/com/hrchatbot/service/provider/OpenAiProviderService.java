@@ -21,7 +21,10 @@ public class OpenAiProviderService extends BaseLLMProvider {
 
     @Override
     public ChatResponse generateResponse(String userMessage, List<ChatMessage> conversationHistory, String context) {
+        long startTime = System.currentTimeMillis();
         try {
+            log.debug("Starting OpenAI API call for user message: {}", userMessage.substring(0, Math.min(50, userMessage.length())));
+            
             String apiKey = config.getApiKey("openai");
             String model = config.getModel("openai");
             
@@ -34,22 +37,34 @@ public class OpenAiProviderService extends BaseLLMProvider {
             List<com.theokanning.openai.completion.chat.ChatMessage> messages = buildOpenAIMessages(
                 userMessage, conversationHistory, context);
             
+            String prompt = buildCompletePrompt(userMessage, conversationHistory, context);
+            log.debug("Built prompt with {} characters", prompt.length());
+            
             ChatCompletionRequest request = ChatCompletionRequest.builder()
                     .model(model)
                     .messages(messages)
-                    .maxTokens(config.getMaxTokens("openai"))
-                    .temperature(config.getTemperature("openai"))
+                    .maxTokens(Math.min(config.getMaxTokens("openai"), 500)) // Cap max tokens for performance
+                    .temperature(Math.min(config.getTemperature("openai"), 0.7)) // Cap temperature for consistency
+                    .topP(0.8) // Add topP for better performance
                     .build();
             
+            long apiStartTime = System.currentTimeMillis();
             String response = service.createChatCompletion(request)
                     .getChoices()
                     .get(0)
                     .getMessage()
                     .getContent();
+            long apiDuration = System.currentTimeMillis() - apiStartTime;
+            
+            long duration = System.currentTimeMillis() - startTime;
+            log.debug("OpenAI API HTTP call completed in {}ms", apiDuration);
+            log.info("OpenAI API call completed in {}ms", duration);
             
             return createResponse(response, context);
                     
         } catch (Exception e) {
+            long duration = System.currentTimeMillis() - startTime;
+            log.error("OpenAI API call failed after {}ms: {}", duration, e.getMessage());
             return handleException(e, context);
         }
     }
