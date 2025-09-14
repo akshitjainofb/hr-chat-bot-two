@@ -57,7 +57,7 @@ llm:
       temperature: 0.5  # Optimized for consistency
       timeout: 15  # Reduced timeout
     perplexity:
-      api-key: ${PERPLEXITY_API_KEY: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}
+      api-key: ${PERPLEXITY_API_KEY:}
       model: sonar-pro  # Fast and efficient model
       enabled: true
       max-tokens: 500  # Optimized for performance
