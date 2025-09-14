@@ -328,7 +328,7 @@ public class PineconeServiceImpl implements PineconeService {
     }
     
     @Override
-    public List<String> searchConversationMemory(String query, User user, int topK) {
+    public List<String> searchConversationMemory(String query, User user, Long chatRoomId, int topK) {
         long startTime = System.currentTimeMillis();
         try {
             Index index = index();
@@ -336,9 +336,10 @@ public class PineconeServiceImpl implements PineconeService {
             // Define fields to return
             List<String> fields = List.of("text", "role", "created_at", "message_id");
             
-            // Create a filter for user-specific conversation memory
+            // Create a filter for user-specific conversation memory within the specific chat room
             Map<String, Object> filter = new HashMap<>();
             filter.put("user_id", user.getId().toString());
+            filter.put("chat_room_id", chatRoomId.toString());
             filter.put("type", "conversation");
             
             log.debug("Searching conversation memory for query: '{}' with topK: {}", query, topK);

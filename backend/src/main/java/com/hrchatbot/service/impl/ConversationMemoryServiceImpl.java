@@ -53,9 +53,9 @@ public class ConversationMemoryServiceImpl implements ConversationMemoryService 
             archiveToLongTermMemory(chatRoom, user, messagesToArchive);
         }
         
-        // 5. Retrieve relevant long-term memory from Pinecone
+        // 5. Retrieve relevant long-term memory from Pinecone (chat room specific)
         List<String> longTermMemory = pineconeService.searchConversationMemory(
-                userQuery, user, memoryConfig.getLongTermMemoryLimit());
+                userQuery, user, chatRoom.getId(), memoryConfig.getLongTermMemoryLimit());
         
         // 6. Retrieve relevant document context from Pinecone
         List<String> documentContext = pineconeService.searchSimilarContent(

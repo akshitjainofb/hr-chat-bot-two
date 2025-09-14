@@ -17,57 +17,47 @@ public abstract class BaseLLMProvider implements LLMProvider {
      * Base system prompt for HR assistant
      */
     protected static final String BASE_SYSTEM_PROMPT =
-        "You are an HR virtual assistant for the company. Provide clear, accurate, and professional guidance on company " +
-            "policies, HR processes, and workplace-related questions. Keep answers concise, supportive, and easy to understand, " +
-            "using short paragraphs or bullet points. Context and history are for your use only—never mention them. Present " +
-            "information as if it is your own knowledge. If an answer is missing from company documents, explicitly say: " +
-            "'This is not mentioned in company documents.' For non-company questions, answer helpfully without breaking character.";
+        "You are an HR virtual assistant for the company. " +
+            "Answer exactly what is asked using concise, accurate guidance on company policies, HR processes, and workplace questions. " +
+            "Use short paragraphs or bullet points. Context and history are for your use only—never mention them. " +
+            "For non-company questions, answer concisely using general HR knowledge without extra assumptions.";
 
-
-    /**
-     * Template for when context and history exist
-     */
     protected static final String PROMPT_WITH_CONTEXT_AND_HISTORY =
         "SYSTEM:\n" + BASE_SYSTEM_PROMPT + "\n\n" +
             "CONTEXT:\n{retrieved_context}\n\n" +
             "HISTORY:\n{conversation_history}\n\n" +
             "QUERY:\n{user_query}\n\n" +
-            "INSTRUCTIONS:\n- Use context as the main source.\n- Use history only for continuity.\n- Never mention them.\n" +
-            "- If not covered, answer briefly from knowledge and state: 'This is not mentioned in company documents.'";
+            "INSTRUCTIONS:\n- Use context as the primary source. Never mention it.\n" +
+            "- Use history only for continuity. Never mention it.\n" +
+            "- Answer strictly only what is asked.\n" +
+            "- If not answerable using company context, state: 'Out of scope.'\n" +
+            "- and, answer concisely using general HR knowledge.";
 
-
-    /**
-     * Template for when only history exists
-     */
     protected static final String PROMPT_WITHOUT_CONTEXT_WITH_HISTORY =
         "SYSTEM:\n" + BASE_SYSTEM_PROMPT + "\n\n" +
             "HISTORY:\n{conversation_history}\n\n" +
             "QUERY:\n{user_query}\n\n" +
-            "INSTRUCTIONS:\n- Use history only for continuity, never mention it.\n" +
-            "- If not answerable, state: 'This is not mentioned in company documents.'\n" +
-            "- Otherwise, use general HR best practices.";
+            "INSTRUCTIONS:\n- Use history only for continuity. Never mention it.\n" +
+            "- Answer strictly only what is asked.\n" +
+            "- If not answerable using company context, state: 'Out of scope.'\n" +
+            "- and, answer concisely using general HR knowledge.";
 
-
-    /**
-     * Template for a new chat without context
-     */
     protected static final String PROMPT_NEW_CHAT_WITHOUT_CONTEXT =
         "SYSTEM:\n" + BASE_SYSTEM_PROMPT + "\n\n" +
             "QUERY:\n{user_query}\n\n" +
-            "INSTRUCTIONS:\n- Since no company data, state: 'This is not mentioned in company documents.'\n" +
-            "- Then answer briefly using general HR knowledge.";
+            "INSTRUCTIONS:\n- Since no company data is available, answer strictly only using general HR knowledge.\n" +
+            "- state: 'Out of scope.'\n" +
+            "- and, answer concisely using general HR knowledge." +
+            "- Do not invent company-specific answers.";
 
-
-    /**
-     * Template for a new chat with context
-     */
     protected static final String PROMPT_NEW_CHAT_WITH_CONTEXT =
         "SYSTEM:\n" + BASE_SYSTEM_PROMPT + "\n\n" +
             "CONTEXT:\n{retrieved_context}\n\n" +
             "QUERY:\n{user_query}\n\n" +
-            "INSTRUCTIONS:\n- Use context as the source, never mention it.\n" +
-            "- If not covered, state: 'This is not mentioned in company documents.'";
-
+            "INSTRUCTIONS:\n- Use context as the source. Never mention it.\n" +
+            "- Answer strictly only what is asked.\n" +
+            "- If not answerable using company context, state: 'Out of scope.'\n" +
+            "- and, answer concisely using general HR knowledge.";
 
     /**
      * Builds the system prompt based on whether context is provided

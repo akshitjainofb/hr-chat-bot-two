@@ -25,10 +25,11 @@ public interface PineconeService {
      * 
      * @param query Current user query
      * @param user The user to search for
+     * @param chatRoomId The chat room ID to search within
      * @param topK Number of relevant messages to retrieve
      * @return List of relevant conversation snippets
      */
-    List<String> searchConversationMemory(String query, User user, int topK);
+    List<String> searchConversationMemory(String query, User user, Long chatRoomId, int topK);
     
     /**
      * Deletes conversation memory for a specific chat room

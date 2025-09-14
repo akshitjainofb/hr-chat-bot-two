@@ -21,6 +21,7 @@ const ChatInterface = ({ room, onRoomUpdate }) => {
   const [clearingChat, setClearingChat] = useState(false);
   const messagesEndRef = useRef(null);
   const menuRef = useRef(null);
+  const currentRequestRef = useRef(null);
 
   // Get user initials
   const getUserInitials = () => {
@@ -73,11 +74,11 @@ const ChatInterface = ({ room, onRoomUpdate }) => {
   // Cleanup pending requests on unmount
   useEffect(() => {
     return () => {
-      if (currentRequest) {
-        currentRequest.cancel('Component unmounted');
+      if (currentRequestRef.current) {
+        currentRequestRef.current.cancel('Component unmounted');
       }
     };
-  }, [currentRequest]);
+  }, []); // Empty dependency array - only run on mount/unmount
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -87,6 +88,7 @@ const ChatInterface = ({ room, onRoomUpdate }) => {
     if (currentRequest) {
       currentRequest.cancel('Request cancelled by user');
       setCurrentRequest(null);
+      currentRequestRef.current = null;
     }
     setIsLoading(false);
     setLoadingStep('');
@@ -145,6 +147,7 @@ const ChatInterface = ({ room, onRoomUpdate }) => {
       // Create cancel token for this request
       const cancelToken = axios.CancelToken.source();
       setCurrentRequest(cancelToken);
+      currentRequestRef.current = cancelToken;
       
       const response = await api.post('/api/chat/send', {
         chatRoomId: room.id,
@@ -158,6 +161,7 @@ const ChatInterface = ({ room, onRoomUpdate }) => {
       clearInterval(stepInterval);
       setIsLoading(false);
       setCurrentRequest(null);
+      currentRequestRef.current = null;
       setRetryCount(0);
 
       if (response.data.success) {
@@ -186,6 +190,7 @@ const ChatInterface = ({ room, onRoomUpdate }) => {
       clearInterval(stepInterval);
       setIsLoading(false);
       setCurrentRequest(null);
+      currentRequestRef.current = null;
       console.error('Error sending message:', error);
       
       // Handle different types of errors
